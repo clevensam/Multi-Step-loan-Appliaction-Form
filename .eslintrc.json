@@ -1,0 +1,33 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "jest": true
+  },
+  "extends": [
+    "airbnb",
+    "plugin:react-hooks/recommended",
+    "plugin:jsx-a11y/recommended"
+  ],
+  "parserOptions": {
+    "ecmaFeatures": { "jsx": true },
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "plugins": ["react", "react-hooks", "jsx-a11y", "import"],
+  "rules": {
+    "react/jsx-filename-extension": [1, { "extensions": [".jsx"] }],
+    "react/react-in-jsx-scope": "off",
+    "react/prop-types": "warn",
+    "react/jsx-props-no-spreading": "off",
+    "import/prefer-default-export": "off",
+    "import/no-unresolved": "error",
+    "jsx-a11y/label-has-associated-control": ["error", { "assert": "either" }],
+    "no-console": ["error", { "allow": ["warn", "error"] }],
+    "max-len": ["warn", { "code": 120 }]
+  },
+  "settings": {
+    "react": { "version": "detect" },
+    "import/resolver": { "node": { "extensions": [".js", ".jsx"] } }
+  }
+}
