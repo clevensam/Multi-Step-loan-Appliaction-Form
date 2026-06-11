@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import Input from './common/Input';
 import RadioGroup from './common/RadioGroup';
 import Checkbox from './common/Checkbox';
@@ -15,12 +15,32 @@ export default function Step4Address({ formData, updateFields, errors }) {
   } = formData;
 
   const pinLookup = usePinCodeLookup(pinCode);
+  const permanentPinLookup = usePinCodeLookup(permanentPinCode);
   const isRented = residenceType === 'Rented';
   const showPreviousAddress = Number(yearsAtAddress) < 1 && yearsAtAddress !== '';
+
+  const userEdited = useRef({ city: false, state: false, permCity: false, permState: false });
+
+  useEffect(() => {
+    if (pinLookup.city && pinLookup.state && !userEdited.current.city && !userEdited.current.state) {
+      updateFields({ city: pinLookup.city, state: pinLookup.state });
+    }
+  }, [pinLookup.city, pinLookup.state, updateFields]);
+
+  useEffect(() => {
+    if (permanentPinLookup.city && permanentPinLookup.state && !userEdited.current.permCity && !userEdited.current.permState) {
+      updateFields({ permanentCity: permanentPinLookup.city, permanentState: permanentPinLookup.state });
+    }
+  }, [permanentPinLookup.city, permanentPinLookup.state, updateFields]);
 
   const handleChange = useCallback((field) => (e) => {
     const value = e.target?.type === 'checkbox' ? e.target.checked : e.target?.value !== undefined ? e.target.value : e;
     const updates = { [field]: value };
+
+    if (field === 'city') userEdited.current.city = true;
+    if (field === 'state') userEdited.current.state = true;
+    if (field === 'permanentCity') userEdited.current.permCity = true;
+    if (field === 'permanentState') userEdited.current.permState = true;
 
     if (field === 'isSameAsPermanent' && value) {
       updates.permanentAddressLine1 = currentAddressLine1 || '';
@@ -30,12 +50,31 @@ export default function Step4Address({ formData, updateFields, errors }) {
       updates.permanentState = state || '';
     }
 
+    if (field === 'pinCode') {
+      userEdited.current.city = false;
+      userEdited.current.state = false;
+    }
+
+    if (field === 'permanentPinCode') {
+      userEdited.current.permCity = false;
+      userEdited.current.permState = false;
+    }
+
     updateFields(updates);
   }, [updateFields, currentAddressLine1, currentAddressLine2, pinCode, city, state]);
 
   const handlePinChange = useCallback((e) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+    userEdited.current.city = false;
+    userEdited.current.state = false;
     updateFields({ pinCode: value });
+  }, [updateFields]);
+
+  const handlePermanentPinChange = useCallback((e) => {
+    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+    userEdited.current.permCity = false;
+    userEdited.current.permState = false;
+    updateFields({ permanentPinCode: value });
   }, [updateFields]);
 
   return (
@@ -80,9 +119,8 @@ export default function Step4Address({ formData, updateFields, errors }) {
           label="City"
           value={pinLookup.city || city}
           onChange={(e) => {
-            if (!pinLookup.city || e.target.value !== pinLookup.city) {
-              handleChange('city')(e);
-            }
+            userEdited.current.city = true;
+            handleChange('city')(e);
           }}
           error={errors?.city}
           placeholder="City / Town"
@@ -93,9 +131,8 @@ export default function Step4Address({ formData, updateFields, errors }) {
           label="State"
           value={pinLookup.state || state}
           onChange={(e) => {
-            if (!pinLookup.state || e.target.value !== pinLookup.state) {
-              handleChange('state')(e);
-            }
+            userEdited.current.state = true;
+            handleChange('state')(e);
           }}
           error={errors?.state}
           placeholder="State"
@@ -185,19 +222,25 @@ export default function Step4Address({ formData, updateFields, errors }) {
               data-cy="step4-perm-addr-line2"
             />
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Input
-                label="PIN Code"
-                value={permanentPinCode}
-                onChange={handleChange('permanentPinCode')}
-                error={errors?.permanentPinCode}
-                placeholder="6-digit PIN"
-                autoComplete="postal-code"
-                data-cy="step4-perm-pincode"
-              />
+              <div>
+                <Input
+                  label="PIN Code"
+                  value={permanentPinCode}
+                  onChange={handlePermanentPinChange}
+                  error={errors?.permanentPinCode || permanentPinLookup.error}
+                  placeholder="6-digit PIN"
+                  autoComplete="postal-code"
+                  data-cy="step4-perm-pincode"
+                />
+                {permanentPinLookup.isLoading && <p className="text-xs text-primary mt-1">Looking up...</p>}
+              </div>
               <Input
                 label="City"
-                value={permanentCity}
-                onChange={handleChange('permanentCity')}
+                value={permanentPinLookup.city || permanentCity}
+                onChange={(e) => {
+                  userEdited.current.permCity = true;
+                  handleChange('permanentCity')(e);
+                }}
                 error={errors?.permanentCity}
                 placeholder="City"
                 autoComplete="address-level2"
@@ -205,8 +248,11 @@ export default function Step4Address({ formData, updateFields, errors }) {
               />
               <Input
                 label="State"
-                value={permanentState}
-                onChange={handleChange('permanentState')}
+                value={permanentPinLookup.state || permanentState}
+                onChange={(e) => {
+                  userEdited.current.permState = true;
+                  handleChange('permanentState')(e);
+                }}
                 error={errors?.permanentState}
                 placeholder="State"
                 autoComplete="address-level1"
