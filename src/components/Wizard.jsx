@@ -1,5 +1,5 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { STEPS } from '../constants';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { STEPS, STEP_6_THRESHOLDS } from '../constants';
 import ProgressBar from './ProgressBar';
 import StepNavigation from './StepNavigation';
 import Step1LoanType from './Step1LoanType';
@@ -22,6 +22,15 @@ const STEP_COMPONENTS = {
   Step8Review,
 };
 
+function computeShowCoApplicant(formData) {
+  const loanType = formData.loanType;
+  const loanAmount = Number(formData.loanAmount) || 0;
+  const threshold = STEP_6_THRESHOLDS[loanType];
+  if (threshold === undefined) return false;
+  if (threshold === 0) return true;
+  return loanAmount > threshold;
+}
+
 export default function Wizard({ formData, updateFields, errors, validateStep, onSubmit }) {
   const [currentStepIdx, setCurrentStepIdx] = useState(0);
   const headerRef = useRef(null);
@@ -29,17 +38,39 @@ export default function Wizard({ formData, updateFields, errors, validateStep, o
   const [showSuccess, setShowSuccess] = useState(false);
   const [referenceId, setReferenceId] = useState('');
 
-  const steps = STEPS.filter((s) => s.visible !== false);
+  const showCoApplicant = computeShowCoApplicant(formData);
+
+  const stepsWithVisibility = useMemo(() => {
+    if (formData.showCoApplicant !== showCoApplicant) {
+      updateFields({ showCoApplicant });
+    }
+    return STEPS.map((s) => ({
+      ...s,
+      isVisible: s.id === 'step6' ? showCoApplicant : true,
+    }));
+  }, [showCoApplicant, formData.showCoApplicant, updateFields]);
+
+  const steps = stepsWithVisibility.filter((s) => s.isVisible !== false);
   const currentStep = steps[currentStepIdx];
   const isFirstStep = currentStepIdx === 0;
   const isLastStep = currentStepIdx === steps.length - 1;
   const progress = ((currentStepIdx + 1) / steps.length) * 100;
 
-  const goToStep = useCallback((index) => {
-    if (index >= 0 && index < steps.length) {
-      setCurrentStepIdx(index);
+  useEffect(() => {
+    if (currentStepIdx >= steps.length) {
+      setCurrentStepIdx(steps.length - 1);
     }
-  }, [steps.length]);
+  }, [steps.length, currentStepIdx]);
+
+  const goToStep = useCallback((index) => {
+    const activeIndex = steps.findIndex((s) => {
+      const origIdx = STEPS.findIndex((os) => os.id === s.id);
+      return origIdx === index;
+    });
+    if (activeIndex >= 0) {
+      setCurrentStepIdx(activeIndex);
+    }
+  }, [steps]);
 
   const nextStep = useCallback(async () => {
     const isValid = await validateStep(currentStepIdx);
