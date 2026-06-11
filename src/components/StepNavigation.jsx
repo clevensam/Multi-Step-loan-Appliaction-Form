@@ -5,6 +5,7 @@ export default function StepNavigation({
   onNext,
   onSubmit,
   currentStepLabel,
+  isSubmitting,
 }) {
   return (
     <div className="flex items-center justify-between">
@@ -36,12 +37,16 @@ export default function StepNavigation({
         <button
           type="button"
           onClick={onSubmit}
-          className="inline-flex items-center px-6 py-2.5 text-sm font-medium rounded-lg
-            bg-accent text-white hover:bg-accent-600 active:bg-accent-700
-            transition-colors duration-150 shadow-sm"
-          aria-label="Submit application"
+          disabled={isSubmitting}
+          className={`inline-flex items-center px-6 py-2.5 text-sm font-medium rounded-lg
+            transition-colors duration-150 shadow-sm
+            ${isSubmitting
+              ? 'bg-gray-400 text-white cursor-not-allowed'
+              : 'bg-accent text-white hover:bg-accent-600 active:bg-accent-700'
+            }`}
+          aria-label={isSubmitting ? 'Submitting application...' : 'Submit application'}
         >
-          Submit Application
+          {isSubmitting ? 'Submitting...' : 'Submit Application'}
         </button>
       ) : (
         <button
