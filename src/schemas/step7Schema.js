@@ -61,86 +61,59 @@ export function getRequiredDocs(formState = {}) {
 
 export default function step7Schema(formState = {}) {
   const requiredDocs = getRequiredDocs(formState);
-  const docs = formState.documents || {};
 
-  const signature = formState.signature || '';
-
-  const schemaShape = {
+  const base = z.object({
     signature: z.string().min(1, 'E-signature is required'),
-  };
-
-  requiredDocs.forEach((docKey) => {
-    if (DOCUMENT_SPECS[docKey]?.multiple) {
-      schemaShape[`documents.${docKey}`] = z
-        .array(z.instanceof(File))
-        .min(1, `${DOCUMENT_SPECS[docKey].label} is required`);
-    } else {
-      schemaShape[`documents.${docKey}`] = z
-        .instanceof(File, { message: `${DOCUMENT_SPECS[docKey].label} is required` });
-    }
   });
 
-  const base = z.object(schemaShape);
-
-  const refinements = [];
-  requiredDocs.forEach((docKey) => {
-    const spec = DOCUMENT_SPECS[docKey];
-    if (!spec) return;
-    if (spec.multiple) {
-      const fieldVal = docs[docKey];
-      if (Array.isArray(fieldVal)) {
-        fieldVal.forEach((file, idx) => {
-          if (file.size > spec.maxSize) {
-            refinements.push({
-              path: [`documents.${docKey}[${idx}]`],
-              message: `${spec.label} exceeds ${spec.maxSize / 1024 / 1024}MB limit`,
-            });
-          }
-        });
-      }
-    } else if (docKey !== 'panCard') {
-      const file = docs[docKey];
-      if (file && file instanceof File && file.size > spec.maxSize) {
-        refinements.push({
-          path: [`documents.${docKey}`],
-          message: `${spec.label} exceeds ${spec.maxSize / 1024 / 1024}MB limit`,
-        });
-      }
+  return base.superRefine((data, ctx) => {
+    if (!data.signature) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'E-signature is required',
+        path: ['signature'],
+      });
     }
-  });
 
-  if (refinements.length > 0 || !signature) {
-    return base.superRefine((data, ctx) => {
-      if (!data.signature) {
+    requiredDocs.forEach((docKey) => {
+      const spec = DOCUMENT_SPECS[docKey];
+      if (!spec) return;
+
+      const file = data.documents?.[docKey];
+
+      if (spec.multiple) {
+        if (!file || !Array.isArray(file) || file.length === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `${spec.label} is required`,
+            path: ['documents', docKey],
+          });
+        } else {
+          file.forEach((f) => {
+            if (f.size > spec.maxSize) {
+              ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: `${spec.label} exceeds ${spec.maxSize / 1024 / 1024}MB limit`,
+                path: ['documents', docKey],
+              });
+            }
+          });
+        }
+      } else if (!file || !(file instanceof File)) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'E-signature is required',
-          path: ['signature'],
+          message: `${spec.label} is required`,
+          path: ['documents', docKey],
+        });
+      } else if (file.size > spec.maxSize) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `${spec.label} exceeds ${spec.maxSize / 1024 / 1024}MB limit`,
+          path: ['documents', docKey],
         });
       }
-      requiredDocs.forEach((docKey) => {
-        const spec = DOCUMENT_SPECS[docKey];
-        if (!spec) return;
-        const file = data.documents?.[docKey];
-        if (!file) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `${spec.label} is required`,
-            path: [`documents.${docKey}`],
-          });
-        }
-        if (spec.multiple && (!file || (Array.isArray(file) && file.length === 0))) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: `${spec.label} is required`,
-            path: [`documents.${docKey}`],
-          });
-        }
-      });
     });
-  }
-
-  return base;
+  });
 }
 
 export { DOCUMENT_SPECS };
