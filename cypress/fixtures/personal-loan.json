@@ -1,0 +1,67 @@
+{
+  "step1": {
+    "loanType": "Personal",
+    "loanAmount": "800000",
+    "loanTenure": "36",
+    "loanPurpose": "debt-consolidation",
+    "referralCode": ""
+  },
+  "step2": {
+    "fullName": "Rajesh Kumar",
+    "dateOfBirth": "1990-06-15",
+    "gender": "Male",
+    "maritalStatus": "Married",
+    "fatherName": "Suresh Kumar",
+    "motherName": "Sunita Devi",
+    "email": "rajesh.kumar@example.com",
+    "mobile": "9876543210",
+    "alternateMobile": ""
+  },
+  "step3": {
+    "panNumber": "ABCPD1234K",
+    "aadhaarNumber": "343511546179",
+    "aadhaarConsent": true,
+    "voterId": "ABC1234567",
+    "passport": ""
+  },
+  "step4": {
+    "currentAddressLine1": "42, Gandhi Nagar",
+    "currentAddressLine2": "Near City Mall",
+    "pinCode": "110001",
+    "residenceType": "Owned",
+    "yearsAtAddress": "5",
+    "isSameAsPermanent": false,
+    "permanentAddressLine1": "12, Patel Street",
+    "permanentAddressLine2": "",
+    "permanentPinCode": "380001",
+    "permanentCity": "",
+    "permanentState": ""
+  },
+  "step5": {
+    "employmentType": "Salaried",
+    "companyName": "Tata Consultancy Services",
+    "designation": "Senior Software Engineer",
+    "monthlyNetSalary": "80000",
+    "yearsOfExperience": "8"
+  },
+  "step6": {
+    "coApplicantName": "Priya Rajesh",
+    "coApplicantRelationship": "Spouse",
+    "coApplicantPan": "EFGPD5678M",
+    "coApplicantIncome": "40000"
+  },
+  "step7": {
+    "documents": {
+      "panCard": "cypress/fixtures/images/test-doc.pdf",
+      "aadhaarFront": "cypress/fixtures/images/test-image.jpg",
+      "aadhaarBack": "cypress/fixtures/images/test-image.jpg",
+      "salarySlips": "cypress/fixtures/images/test-doc.pdf",
+      "bankStatements": "cypress/fixtures/images/test-doc.pdf",
+      "photograph": "cypress/fixtures/images/test-image.jpg"
+    }
+  },
+  "step8": {
+    "consents": ["consent-accurate", "consent-credit", "consent-terms", "consent-comm"],
+    "consentHighEmi": false
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "step1": {
+    "loanType": "Business",
+    "loanAmount": "3000000",
+    "loanTenure": "60",
+    "loanPurpose": "expansion",
+    "referralCode": ""
+  },
+  "step2": {
+    "fullName": "Priya Patel",
+    "dateOfBirth": "1988-11-22",
+    "gender": "Female",
+    "maritalStatus": "Married",
+    "fatherName": "Arun Patel",
+    "motherName": "Meena Patel",
+    "email": "priya.patel@example.com",
+    "mobile": "8765432109",
+    "alternateMobile": ""
+  },
+  "step3": {
+    "panNumber": "ABCCD9012N",
+    "aadhaarNumber": "343511546179",
+    "aadhaarConsent": true,
+    "voterId": "",
+    "passport": ""
+  },
+  "step4": {
+    "currentAddressLine1": "55, Brigade Road",
+    "currentAddressLine2": "MG Road Area",
+    "pinCode": "560001",
+    "residenceType": "Owned",
+    "yearsAtAddress": "7",
+    "isSameAsPermanent": true,
+    "permanentAddressLine1": "",
+    "permanentAddressLine2": "",
+    "permanentPinCode": "",
+    "permanentCity": "",
+    "permanentState": ""
+  },
+  "step5": {
+    "employmentType": "Business Owner",
+    "businessName": "Patel Enterprises",
+    "businessType": "private-limited",
+    "annualTurnover": "5000000",
+    "yearsInBusiness": "5",
+    "monthlyIncome": "150000",
+    "gstNumber": "29ABCDE1234F1Z5",
+    "officeAddress": "55, Brigade Road, Bangalore"
+  },
+  "step6": {
+    "coApplicantName": "Vikram Patel",
+    "coApplicantRelationship": "Business Partner",
+    "coApplicantPan": "RSTCD7890K",
+    "coApplicantIncome": "80000"
+  },
+  "step7": {
+    "documents": {
+      "panCard": "cypress/fixtures/images/test-doc.pdf",
+      "aadhaarFront": "cypress/fixtures/images/test-image.jpg",
+      "aadhaarBack": "cypress/fixtures/images/test-image.jpg",
+      "bankStatements": "cypress/fixtures/images/test-doc.pdf",
+      "itrReturns": "cypress/fixtures/images/test-doc.pdf",
+      "businessRegistration": "cypress/fixtures/images/test-doc.pdf",
+      "gstReturns": "cypress/fixtures/images/test-doc.pdf",
+      "photograph": "cypress/fixtures/images/test-image.jpg"
+    }
+  },
+  "step8": {
+    "consents": ["consent-accurate", "consent-credit", "consent-terms", "consent-comm"],
+    "consentHighEmi": false
+  }
+}

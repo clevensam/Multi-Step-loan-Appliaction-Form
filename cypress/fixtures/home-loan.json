@@ -1,0 +1,68 @@
+{
+  "step1": {
+    "loanType": "Home",
+    "loanAmount": "5000000",
+    "loanTenure": "240",
+    "loanPurpose": "purchase",
+    "referralCode": ""
+  },
+  "step2": {
+    "fullName": "Amit Sharma",
+    "dateOfBirth": "1985-03-10",
+    "gender": "Male",
+    "maritalStatus": "Married",
+    "fatherName": "Vijay Sharma",
+    "motherName": "Kavita Sharma",
+    "email": "amit.sharma@example.com",
+    "mobile": "9988776655",
+    "alternateMobile": ""
+  },
+  "step3": {
+    "panNumber": "XYZPD9012N",
+    "aadhaarNumber": "277930901319",
+    "aadhaarConsent": true,
+    "voterId": "",
+    "passport": "A1234567"
+  },
+  "step4": {
+    "currentAddressLine1": "78, Lokhandwala Complex",
+    "currentAddressLine2": "Andheri West",
+    "pinCode": "400053",
+    "residenceType": "Owned",
+    "yearsAtAddress": "3",
+    "isSameAsPermanent": true,
+    "permanentAddressLine1": "",
+    "permanentAddressLine2": "",
+    "permanentPinCode": "",
+    "permanentCity": "",
+    "permanentState": ""
+  },
+  "step5": {
+    "employmentType": "Salaried",
+    "companyName": "HDFC Bank",
+    "designation": "Branch Manager",
+    "monthlyNetSalary": "120000",
+    "yearsOfExperience": "12"
+  },
+  "step6": {
+    "coApplicantName": "Neha Amit",
+    "coApplicantRelationship": "Spouse",
+    "coApplicantPan": "LMNPD3456P",
+    "coApplicantIncome": "45000"
+  },
+  "step7": {
+    "documents": {
+      "panCard": "cypress/fixtures/images/test-doc.pdf",
+      "aadhaarFront": "cypress/fixtures/images/test-image.jpg",
+      "aadhaarBack": "cypress/fixtures/images/test-image.jpg",
+      "salarySlips": "cypress/fixtures/images/test-doc.pdf",
+      "bankStatements": "cypress/fixtures/images/test-doc.pdf",
+      "propertyDocs": "cypress/fixtures/images/test-doc.pdf",
+      "photograph": "cypress/fixtures/images/test-image.jpg"
+    }
+  },
+  "step8": {
+    "consents": ["consent-accurate", "consent-credit", "consent-terms", "consent-comm"],
+    "consentHighEmi": false
+  }
+}

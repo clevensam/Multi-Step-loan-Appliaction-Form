@@ -1,0 +1,24 @@
+{
+  "invalidPanFormats": [
+    "ABCD12345A",
+    "ABCDE12345",
+    "ABCDEFGHIJ",
+    "abcde1234a"
+  ],
+  "invalidPanEntity": "ABCDE1234F",
+  "invalidAadhaarFormats": [
+    "12345678901",
+    "ABCD12345678",
+    "000000000000",
+    "1234 5678 90"
+  ],
+  "invalidAadhaarChecksum": "111111111111",
+  "youngDob": "2005-06-13",
+  "oldDob": "1955-06-13",
+  "ageBoundaryAccept": "2005-06-12",
+  "ageBoundaryReject": "2005-06-13",
+  "invalidMobile": "1234567890",
+  "invalidEmail": "not-an-email",
+  "thresholdAmountExact": "500000",
+  "thresholdAmountAbove": "800000"
+}
