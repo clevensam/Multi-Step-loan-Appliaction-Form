@@ -355,9 +355,7 @@ Implemented via three mechanisms (see `ARCHITECTURE.md` for details):
 
 ### One-click Deploy
 
-[![Deploy to Vercel](https://vercel.com/button)](https://vercel.com/import/project?template=https://github.com/clevensam/Multi-Step-loan-Appliaction-Form)
-[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/clevensam/Multi-Step-loan-Appliaction-Form)
-
+[![Deploy to Vercel]
 ### Manual
 
 ```bash
@@ -367,4 +365,4 @@ npx serve dist          # or deploy dist/ to any static host
 
 ### Live URL
 
-**https://lendswift.vercel.app**
+**https://lendswift2.vercel.app**
