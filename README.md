@@ -355,7 +355,7 @@ Implemented via three mechanisms (see `ARCHITECTURE.md` for details):
 
 ### One-click Deploy
 
-[![Deploy to Vercel]
+[![Deploy to Vercel](https://vercel.com/button)]
 ### Manual
 
 ```bash
