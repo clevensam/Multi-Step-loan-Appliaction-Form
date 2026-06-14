@@ -52,21 +52,21 @@ describe('File Upload & Compression', () => {
 
   it('uploads a valid JPG image and shows preview', () => {
     cy.get('[data-cy="step7-photograph"] input[type="file"]').selectFile(
-      'cypress/fixtures/images/test-image.jpg', { force: true }
+      'cypress/fixtures/samples/photograph.jpg', { force: true }
     );
     cy.get('[data-cy="step7-photograph"] img').should('be.visible');
   });
 
   it('uploads a valid PDF document', () => {
     cy.get('[data-cy="step7-bankStatements"] input[type="file"]').selectFile(
-      'cypress/fixtures/images/test-doc.pdf', { force: true }
+      'cypress/fixtures/samples/bank-statement.pdf', { force: true }
     );
     cy.get('[data-cy="step7-bankStatements"]').contains('PDF').should('be.visible');
   });
 
   it('compresses a large image and shows reduction info', () => {
     cy.get('[data-cy="step7-aadhaarFront"] input[type="file"]').selectFile(
-      'cypress/fixtures/images/compress-test.jpg', { force: true }
+      'cypress/fixtures/samples/compress-test.jpg', { force: true }
     );
     cy.contains('Compressing image', { timeout: 5000 }).should('be.visible');
     cy.contains('Original', { timeout: 30000 }).should('be.visible');
@@ -74,24 +74,24 @@ describe('File Upload & Compression', () => {
   });
 
   it('uploads multiple documents without error', () => {
-    cy.uploadDocument('aadhaarFront', 'cypress/fixtures/images/test-image.jpg');
+    cy.uploadDocument('aadhaarFront', 'cypress/fixtures/samples/aadhaar-front.jpg');
     cy.wait(500);
-    cy.uploadDocument('aadhaarBack', 'cypress/fixtures/images/test-image.jpg');
+    cy.uploadDocument('aadhaarBack', 'cypress/fixtures/samples/aadhaar-back.jpg');
     cy.wait(500);
-    cy.uploadDocument('salarySlips', 'cypress/fixtures/images/test-doc.pdf');
+    cy.uploadDocument('salarySlips', 'cypress/fixtures/samples/salary-slip.pdf');
     cy.wait(500);
-    cy.uploadDocument('bankStatements', 'cypress/fixtures/images/test-doc.pdf');
+    cy.uploadDocument('bankStatements', 'cypress/fixtures/samples/bank-statement.pdf');
     cy.wait(500);
-    cy.uploadDocument('photograph', 'cypress/fixtures/images/test-image.jpg');
+    cy.uploadDocument('photograph', 'cypress/fixtures/samples/photograph.jpg');
 
     cy.get('[data-cy="step7-aadhaarFront"] img', { timeout: 10000 }).should('be.visible');
     cy.get('[data-cy="step7-aadhaarBack"] img', { timeout: 10000 }).should('be.visible');
   });
 
   it('shows error for missing required document on submit', () => {
-    cy.uploadDocument('aadhaarFront', 'cypress/fixtures/images/test-image.jpg');
-    cy.uploadDocument('bankStatements', 'cypress/fixtures/images/test-doc.pdf');
-    cy.uploadDocument('photograph', 'cypress/fixtures/images/test-image.jpg');
+    cy.uploadDocument('aadhaarFront', 'cypress/fixtures/samples/aadhaar-front.jpg');
+    cy.uploadDocument('bankStatements', 'cypress/fixtures/samples/bank-statement.pdf');
+    cy.uploadDocument('photograph', 'cypress/fixtures/samples/photograph.jpg');
     cy.drawSignature('step7-signature');
     cy.goToNextStep();
     cy.contains('Aadhaar Back').should('be.visible');

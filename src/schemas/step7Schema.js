@@ -36,7 +36,7 @@ const DOCUMENT_SPECS = {
 
 export function getRequiredDocs(formState = {}) {
   const {
-    loanType, employmentType, panVerified = false,
+    loanType, employmentType,
   } = formState;
   const isSalaried = employmentType === EMPLOYMENT_TYPES.SALARIED;
   const isSelfEmployed = employmentType === EMPLOYMENT_TYPES.SELF_EMPLOYED;
@@ -45,7 +45,7 @@ export function getRequiredDocs(formState = {}) {
 
   const required = [];
 
-  if (!panVerified) required.push('panCard');
+  required.push('panCard');
   required.push('aadhaarFront');
   required.push('aadhaarBack');
   if (isSalaried) required.push('salarySlips');
@@ -61,13 +61,16 @@ export function getRequiredDocs(formState = {}) {
 
 export default function step7Schema(formState = {}) {
   const requiredDocs = getRequiredDocs(formState);
+  const panVerified = formState.panVerified || false;
 
   const docShape = {};
   requiredDocs.forEach((docKey) => {
     const spec = DOCUMENT_SPECS[docKey];
     if (!spec) return;
 
-    if (spec.multiple) {
+    if (docKey === 'panCard' && panVerified) {
+      docShape[docKey] = z.instanceof(File).optional();
+    } else if (spec.multiple) {
       docShape[docKey] = z
         .array(z.instanceof(File))
         .min(1, `${spec.label} is required`)

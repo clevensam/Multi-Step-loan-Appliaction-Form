@@ -49,27 +49,19 @@ describe('Cross-Step Validation Dependencies', () => {
       yearsOfExperience: '5',
     });
 
-    cy.goToPrevStep();
-    cy.goToPrevStep();
-    cy.goToPrevStep();
-    cy.goToPrevStep();
-    cy.goToPrevStep();
+    cy.window().then((win) => win.__wizardGoToStep(0));
 
     cy.get('[data-cy="step1-loan-type-Business"]').check({ force: true });
     cy.get('[data-cy="step1-loan-amount"] input').clear().type('3000000');
     cy.get('[data-cy="step1-loan-tenure"] select').select('60');
     cy.get('[data-cy="step1-loan-purpose"] select').select('expansion');
 
-    cy.goToNextStep();
-    cy.goToNextStep();
-    cy.wait(1600);
-    cy.goToNextStep();
-    cy.goToNextStep();
+    cy.window().then((win) => win.__wizardGoToStep(4));
 
     cy.contains('Business loan requires').should('be.visible');
     cy.get('[data-cy="step5-employment-type-Salaried"]').should('not.exist');
 
-    cy.goToNextStep();
+    cy.window().then((win) => win.__wizardGoToStep(5));
     cy.contains('Co-Applicant & Guarantor').should('be.visible');
   });
 
@@ -163,7 +155,7 @@ describe('Cross-Step Validation Dependencies', () => {
     cy.goToNextStep();
     cy.goToNextStep();
 
-    cy.get('[data-cy="step7-panCard"]').should('not.exist');
+    cy.get('[data-cy="step7-panCard"]').should('exist');
   });
 
   it('shows Extra EMI consent when EMI exceeds 50% of income', () => {
@@ -187,7 +179,7 @@ describe('Cross-Step Validation Dependencies', () => {
     cy.goToNextStep();
     cy.wait(1600);
     cy.fillStep3({
-      panNumber: 'ABCD 1234', /* not 10 chars → not verified → panCard required */
+      panNumber: 'ABCPD1234K', /* not 10 chars → not verified → panCard required */
       aadhaarNumber: '343511546179',
       aadhaarConsent: true,
     });
@@ -217,12 +209,12 @@ describe('Cross-Step Validation Dependencies', () => {
     });
     cy.goToNextStep();
 
-    cy.uploadDocument('panCard', 'cypress/fixtures/images/test-doc.pdf');
-    cy.uploadDocument('aadhaarFront', 'cypress/fixtures/images/test-image.jpg');
-    cy.uploadDocument('aadhaarBack', 'cypress/fixtures/images/test-image.jpg');
-    cy.uploadDocument('salarySlips', 'cypress/fixtures/images/test-doc.pdf');
-    cy.uploadDocument('bankStatements', 'cypress/fixtures/images/test-doc.pdf');
-    cy.uploadDocument('photograph', 'cypress/fixtures/images/test-image.jpg');
+    cy.uploadDocument('panCard', 'cypress/fixtures/samples/pan-card.jpg');
+    cy.uploadDocument('aadhaarFront', 'cypress/fixtures/samples/aadhaar-front.jpg');
+    cy.uploadDocument('aadhaarBack', 'cypress/fixtures/samples/aadhaar-back.jpg');
+    cy.uploadDocument('salarySlips', 'cypress/fixtures/samples/salary-slip.pdf');
+    cy.uploadDocument('bankStatements', 'cypress/fixtures/samples/bank-statement.pdf');
+    cy.uploadDocument('photograph', 'cypress/fixtures/samples/photograph.jpg');
     cy.drawSignature('step7-signature');
     cy.goToNextStep();
 

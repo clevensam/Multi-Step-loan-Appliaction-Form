@@ -15,6 +15,7 @@ dist-ssr
 # Test artifacts
 cypress/screenshots/
 cypress/videos/
+cypress/fixtures/samples/
 
 # Editor directories and files
 .vscode/*

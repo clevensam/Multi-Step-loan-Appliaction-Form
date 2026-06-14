@@ -27,7 +27,7 @@
   "step4": {
     "currentAddressLine1": "78, Lokhandwala Complex",
     "currentAddressLine2": "Andheri West",
-    "pinCode": "400053",
+    "pinCode": "560001",
     "residenceType": "Owned",
     "yearsAtAddress": "3",
     "isSameAsPermanent": true,
@@ -52,13 +52,13 @@
   },
   "step7": {
     "documents": {
-      "panCard": "cypress/fixtures/images/test-doc.pdf",
-      "aadhaarFront": "cypress/fixtures/images/test-image.jpg",
-      "aadhaarBack": "cypress/fixtures/images/test-image.jpg",
-      "salarySlips": "cypress/fixtures/images/test-doc.pdf",
-      "bankStatements": "cypress/fixtures/images/test-doc.pdf",
-      "propertyDocs": "cypress/fixtures/images/test-doc.pdf",
-      "photograph": "cypress/fixtures/images/test-image.jpg"
+      "panCard": "cypress/fixtures/samples/pan-card.jpg",
+      "aadhaarFront": "cypress/fixtures/samples/aadhaar-front.jpg",
+      "aadhaarBack": "cypress/fixtures/samples/aadhaar-back.jpg",
+      "salarySlips": "cypress/fixtures/samples/salary-slip.pdf",
+      "bankStatements": "cypress/fixtures/samples/bank-statement.pdf",
+      "propertyDocs": "cypress/fixtures/samples/property-document.pdf",
+      "photograph": "cypress/fixtures/samples/photograph.jpg"
     }
   },
   "step8": {
