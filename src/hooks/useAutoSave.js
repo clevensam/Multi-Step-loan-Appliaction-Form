@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { encrypt } from '../utils/encryption';
 
-export default function useAutoSave(storageKey, state, metadata = {}, interval = 30000, onSaved) {
+export default function useAutoSave(storageKey, state, metadata = {}, interval = 30000, onSaved = undefined) {
   const timerRef = useRef(null);
   const saveInProgress = useRef(false);
   const stateRef = useRef(state);
@@ -38,7 +38,7 @@ export default function useAutoSave(storageKey, state, metadata = {}, interval =
     } finally {
       saveInProgress.current = false;
     }
-  }, [storageKey]);
+  }, [storageKey, onSaved]);
 
   useEffect(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
