@@ -58,3 +58,13 @@ export const GENDERS = ['Male', 'Female', 'Other'];
 export const RESIDENCE_TYPES = ['Owned', 'Rented', 'Company', 'Family'];
 
 export const RELATIONSHIPS = ['Spouse', 'Parent', 'Sibling', 'Business Partner'];
+
+export const BUSINESS_TYPES = [
+  'Sole Proprietorship',
+  'Partnership Firm',
+  'Private Limited Company',
+  'Public Limited Company',
+  'Limited Liability Partnership',
+  'One Person Company',
+  'Other',
+];

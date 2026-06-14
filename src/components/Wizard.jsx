@@ -24,33 +24,38 @@ const STEP_COMPONENTS = {
   Step8Review,
 };
 
-function computeShowCoApplicant(formData) {
-  const loanType = formData.loanType;
-  const loanAmount = Number(formData.loanAmount) || 0;
+function computeShowCoApplicant(fd) {
+  const loanType = fd.loanType;
+  const loanAmount = Number(fd.loanAmount) || 0;
   const threshold = STEP_6_THRESHOLDS[loanType];
   if (threshold === undefined) return false;
   if (threshold === 0) return true;
   return loanAmount > threshold;
 }
 
-export default function Wizard({ formData, updateFields, errors, validateStep, onSubmit, onStepChange, defaultStep = 0 }) {
+export default function Wizard({
+  getValues, setValue, watch, errors, register, control,
+  trigger, onSubmit, onStepChange, defaultStep = 0,
+}) {
   const [currentStepIdx, setCurrentStepIdx] = useState(defaultStep);
   const headerRef = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [referenceId, setReferenceId] = useState('');
 
+  const formData = watch();
   const showCoApplicant = computeShowCoApplicant(formData);
 
-  const stepsWithVisibility = useMemo(() => {
+  useEffect(() => {
     if (formData.showCoApplicant !== showCoApplicant) {
-      updateFields({ showCoApplicant });
+      setValue('showCoApplicant', showCoApplicant);
     }
-    return STEPS.map((s) => ({
-      ...s,
-      isVisible: s.id === 'step6' ? showCoApplicant : true,
-    }));
-  }, [showCoApplicant, formData.showCoApplicant, updateFields]);
+  }, [showCoApplicant, formData.showCoApplicant, setValue]);
+
+  const stepsWithVisibility = useMemo(() => STEPS.map((s) => ({
+    ...s,
+    isVisible: s.id === 'step6' ? showCoApplicant : true,
+  })), [showCoApplicant]);
 
   const steps = stepsWithVisibility.filter((s) => s.isVisible !== false);
   const currentStep = steps[currentStepIdx];
@@ -58,7 +63,8 @@ export default function Wizard({ formData, updateFields, errors, validateStep, o
   const isLastStep = currentStepIdx === steps.length - 1;
   const progress = ((currentStepIdx + 1) / steps.length) * 100;
 
-  function getMonthlyIncome(fd) {
+  function getMonthlyIncome() {
+    const fd = getValues();
     let income = 0;
     if (fd.employmentType === EMPLOYMENT_TYPES.SALARIED) {
       income = Number(fd.monthlyNetSalary) || 0;
@@ -71,26 +77,28 @@ export default function Wizard({ formData, updateFields, errors, validateStep, o
     return income;
   }
 
-  function computeEmiRatio(fd) {
+  function computeEmiRatio() {
+    const fd = getValues();
     const { loanType, loanAmount, loanTenure } = fd;
     if (!loanType || !loanAmount || !loanTenure) return 0;
     const annualRate = INTEREST_RATES[loanType];
     if (!annualRate) return 0;
     const emi = calculateEMI(Number(loanAmount), annualRate, Number(loanTenure));
-    const monthlyIncome = getMonthlyIncome(fd);
+    const monthlyIncome = getMonthlyIncome();
     if (monthlyIncome <= 0) return 0;
     return (emi / monthlyIncome) * 100;
   }
 
-  const canSubmit = useMemo(() => {
+  const canSubmit = (() => {
     if (!isLastStep) return true;
-    const { documents = {}, ...rest } = formData;
+    const fd = getValues();
+    const { documents = {}, ...rest } = fd;
     const allConsents = rest.consentAccurate && rest.consentCreditCheck
       && rest.consentTerms && rest.consentCommunications;
     if (!allConsents) return false;
-    const emiRatio = computeEmiRatio(formData);
+    const emiRatio = computeEmiRatio();
     if (emiRatio > 50 && !rest.consentHighEmi) return false;
-    const required = getRequiredDocs(formData);
+    const required = getRequiredDocs(fd);
     const allDocs = required.every((key) => {
       const file = documents[key];
       const spec = DOCUMENT_SPECS[key];
@@ -99,9 +107,9 @@ export default function Wizard({ formData, updateFields, errors, validateStep, o
       return file instanceof File;
     });
     if (!allDocs) return false;
-    if (!formData.signature) return false;
+    if (!fd.signature) return false;
     return true;
-  }, [isLastStep, formData]);
+  })();
 
   useEffect(() => {
     onStepChange?.(currentStepIdx);
@@ -135,11 +143,11 @@ export default function Wizard({ formData, updateFields, errors, validateStep, o
   }, [goToStep]);
 
   const nextStep = useCallback(async () => {
-    const isValid = await validateStep(currentStep.id);
+    const isValid = await trigger();
     if (isValid && currentStepIdx < steps.length - 1) {
       setCurrentStepIdx((prev) => prev + 1);
     }
-  }, [currentStep, currentStepIdx, steps.length, validateStep]);
+  }, [trigger, currentStepIdx, steps.length]);
 
   const prevStep = useCallback(() => {
     if (currentStepIdx > 0) {
@@ -148,7 +156,7 @@ export default function Wizard({ formData, updateFields, errors, validateStep, o
   }, [currentStepIdx]);
 
   const handleSubmit = useCallback(async () => {
-    const isValid = await validateStep(currentStep.id);
+    const isValid = await trigger();
     if (!isValid) return;
 
     setIsSubmitting(true);
@@ -158,7 +166,7 @@ export default function Wizard({ formData, updateFields, errors, validateStep, o
     setShowSuccess(true);
     setIsSubmitting(false);
     onSubmit?.();
-  }, [currentStepIdx, validateStep, onSubmit]);
+  }, [trigger, onSubmit]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -224,9 +232,12 @@ export default function Wizard({ formData, updateFields, errors, validateStep, o
 
       <main ref={headerRef} className="max-w-4xl mx-auto px-4 py-8">
         <CurrentStepComponent
-          formData={formData}
-          updateFields={updateFields}
+          register={register}
           errors={errors}
+          control={control}
+          getValues={getValues}
+          setValue={setValue}
+          watch={watch}
           goToStep={goToStep}
         />
       </main>

@@ -1,9 +1,8 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Wizard from './components/Wizard';
-import getSchema from './schemas/schemaFactory';
 import useAutoSave from './hooks/useAutoSave';
 import useFormPersistence from './hooks/useFormPersistence';
-import { LOAN_TYPES, EMPLOYMENT_TYPES, STEPS } from './constants';
+import useStepForm from './hooks/useStepForm';
 
 const defaultFormData = {
   loanType: '',
@@ -115,11 +114,14 @@ export default function App() {
     savedData, showResume, resume, startFresh,
   } = useFormPersistence(STORAGE_KEY);
 
-  const [formData, setFormData] = useState(defaultFormData);
-  const [errors, setErrors] = useState({});
+  const {
+    register, getValues, setValue, watch, trigger, reset, control,
+    formState: { errors },
+    currentStepIdx, setCurrentStepIdx,
+  } = useStepForm(defaultFormData);
+
   const [initialised, setInitialised] = useState(false);
   const [toast, setToast] = useState(null);
-  const [currentStep, setCurrentStep] = useState(0);
 
   useEffect(() => {
     if (showResume) return;
@@ -128,13 +130,10 @@ export default function App() {
     }
   }, [showResume, initialised]);
 
-  const getStorageKey = useCallback(() => {
-    const loanType = formData.loanType || 'new';
-    return `${STORAGE_KEY}_${loanType}`;
-  }, [formData.loanType]);
+  const formData = watch();
 
   const AUTO_SAVE_INTERVAL = typeof window !== 'undefined' && window.Cypress ? 3000 : 30000;
-  useAutoSave(STORAGE_KEY, formData, { step: currentStep }, AUTO_SAVE_INTERVAL, (timestamp) => {
+  useAutoSave(STORAGE_KEY, formData, { step: currentStepIdx }, AUTO_SAVE_INTERVAL, (timestamp) => {
     const time = new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     setToast(`Draft saved at ${time}`);
   });
@@ -145,142 +144,65 @@ export default function App() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  const clearStepErrors = useCallback((stepIndex) => {
-    const schema = getSchema(stepIndex, formData);
-    if (!schema) return;
-    const fields = Object.keys(schema.shape || {});
-    setErrors((prev) => {
-      const next = { ...prev };
-      fields.forEach((f) => delete next[f]);
-      return next;
-    });
-  }, [formData]);
-
-  const updateFields = useCallback((fields) => {
-    setFormData((prev) => {
-      let next = { ...prev, ...fields };
-
-      if (fields.employmentType !== undefined && fields.employmentType !== prev.employmentType) {
-        const cleared = {
-          companyName: '',
-          designation: '',
-          monthlyNetSalary: '',
-          yearsOfExperience: '',
-          businessName: '',
-          businessType: '',
-          annualTurnover: '',
-          yearsInBusiness: '',
-          monthlyIncome: '',
-          gstNumber: '',
-          officeAddress: '',
-        };
-        next = { ...next, ...cleared };
-      }
-
-      if (fields.loanType !== undefined && fields.loanType !== prev.loanType) {
+  const setFieldValue = useCallback((name, value) => {
+    if (name === 'loanType') {
+      const prev = getValues('loanType');
+      setValue(name, value);
+      if (value !== prev) {
         const cleared = {
           employmentType: '',
-          companyName: '',
-          designation: '',
-          monthlyNetSalary: '',
-          yearsOfExperience: '',
-          businessName: '',
-          businessType: '',
-          annualTurnover: '',
-          yearsInBusiness: '',
-          monthlyIncome: '',
-          gstNumber: '',
-          officeAddress: '',
+          companyName: '', designation: '', monthlyNetSalary: '', yearsOfExperience: '',
+          businessName: '', businessType: '', annualTurnover: '', yearsInBusiness: '',
+          monthlyIncome: '', gstNumber: '', officeAddress: '',
           showCoApplicant: false,
-          coApplicantName: '',
-          coApplicantRelationship: '',
-          coApplicantPan: '',
-          coApplicantIncome: '',
-          coApplicantConsent: false,
-          coApplicantSignature: '',
+          coApplicantName: '', coApplicantRelationship: '', coApplicantPan: '',
+          coApplicantIncome: '', coApplicantConsent: false, coApplicantSignature: '',
           documents: {},
         };
-        next = { ...next, ...cleared };
+        Object.entries(cleared).forEach(([k, v]) => setValue(k, v));
       }
-
-      return next;
-    });
-
-    setErrors((prev) => {
-      const next = { ...prev };
-      Object.keys(fields).forEach((key) => {
-        if (key === 'documents' && typeof fields[key] === 'object') {
-          Object.keys(next).forEach((k) => {
-            if (k.startsWith('documents.')) delete next[k];
-          });
-        } else {
-          delete next[key];
-          Object.keys(next).forEach((k) => {
-            if (k.startsWith(key + '.')) delete next[k];
-          });
+    } else if (name === 'employmentType') {
+      const prev = getValues('employmentType');
+      setValue(name, value);
+      if (value !== prev) {
+        if (value === 'Salaried') {
+          const cleared = {
+            businessName: '', businessType: '', annualTurnover: '', yearsInBusiness: '',
+            monthlyIncome: '', gstNumber: '', officeAddress: '',
+          };
+          Object.entries(cleared).forEach(([k, v]) => setValue(k, v));
+        } else if (value === 'Self-Employed' || value === 'Business Owner') {
+          setValue('companyName', '');
+          setValue('designation', '');
+          setValue('monthlyNetSalary', '');
+          setValue('yearsOfExperience', '');
         }
-      });
-      return next;
-    });
-  }, []);
-
-  const validateStep = useCallback(async (stepId) => {
-    const absoluteIndex = STEPS.findIndex((s) => s.id === stepId);
-    const formDataWithVerified = {
-      ...formData,
-      panVerified: !!(formData.panNumber && formData.panNumber.length === 10),
-    };
-    const schema = getSchema(absoluteIndex, formDataWithVerified);
-    if (!schema) return true;
-
-    const result = schema.safeParse(formData);
-    if (result.success) {
-      setErrors((prev) => {
-        const next = { ...prev };
-        const fields = Object.keys(schema.shape || {});
-        fields.forEach((f) => {
-          delete next[f];
-          Object.keys(next).forEach((k) => {
-            if (k.startsWith(f + '.')) delete next[k];
-          });
-        });
-        return next;
-      });
-      return true;
-    }
-
-    const flatErrors = {};
-    result.error.issues.forEach((issue) => {
-      const key = issue.path.join('.');
-      if (key && !flatErrors[key]) {
-        flatErrors[key] = issue.message;
       }
-    });
-    setErrors((prev) => ({ ...prev, ...flatErrors }));
-    return false;
-  }, [formData]);
+    } else {
+      setValue(name, value);
+    }
+  }, [setValue, getValues]);
 
-  const handleSubmit = useCallback(() => {
-    const storageKey = getStorageKey();
-    localStorage.removeItem(storageKey);
-    localStorage.removeItem(`${storageKey}_meta`);
-  }, [getStorageKey]);
+  const clearStorage = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(`${STORAGE_KEY}_meta`);
+  }, []);
 
   const handleResume = useCallback(() => {
     const data = resume();
     if (data) {
-      setFormData({ ...defaultFormData, ...data });
+      reset({ ...defaultFormData, ...data });
       if (savedData?.step !== undefined) {
-        setCurrentStep(savedData.step);
+        setCurrentStepIdx(Number(savedData.step));
       }
     }
-  }, [resume, savedData]);
+  }, [resume, savedData, reset, setCurrentStepIdx]);
 
   const handleStartFresh = useCallback(() => {
     startFresh();
-    setFormData(defaultFormData);
-    setCurrentStep(0);
-  }, [startFresh]);
+    reset(defaultFormData);
+    setCurrentStepIdx(0);
+  }, [startFresh, reset, setCurrentStepIdx]);
 
   if (showResume) {
     return (
@@ -301,15 +223,18 @@ export default function App() {
           {toast}
         </div>
       )}
-        <Wizard
-          formData={formData}
-          updateFields={updateFields}
-          errors={errors}
-          validateStep={validateStep}
-          onSubmit={handleSubmit}
-          onStepChange={setCurrentStep}
-          defaultStep={currentStep}
-        />
+      <Wizard
+        getValues={getValues}
+        setValue={setFieldValue}
+        watch={watch}
+        errors={errors}
+        register={register}
+        control={control}
+        trigger={trigger}
+        onSubmit={clearStorage}
+        onStepChange={setCurrentStepIdx}
+        defaultStep={currentStepIdx}
+      />
     </>
   );
 }

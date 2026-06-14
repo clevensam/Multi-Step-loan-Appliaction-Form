@@ -2,213 +2,194 @@ import { useCallback } from 'react';
 import Input from './common/Input';
 import Select from './common/Select';
 import RadioGroup from './common/RadioGroup';
-import { LOAN_TYPES, EMPLOYMENT_TYPES } from '../constants';
+import { EMPLOYMENT_TYPES, BUSINESS_TYPES } from '../constants';
 
-const EMPLOYMENT_OPTIONS = [
-  { value: EMPLOYMENT_TYPES.SALARIED, label: 'Salaried' },
-  { value: EMPLOYMENT_TYPES.SELF_EMPLOYED, label: 'Self-Employed' },
-  { value: EMPLOYMENT_TYPES.BUSINESS_OWNER, label: 'Business Owner' },
-];
+const EMPLOYMENT_TYPE_OPTIONS = Object.entries(EMPLOYMENT_TYPES).map(([, value]) => ({
+  value,
+  label: value,
+}));
 
-const BUSINESS_TYPE_OPTIONS = [
-  { value: 'sole-proprietorship', label: 'Sole Proprietorship' },
-  { value: 'partnership', label: 'Partnership' },
-  { value: 'private-limited', label: 'Private Limited' },
-  { value: 'llp', label: 'LLP' },
-  { value: 'public-limited', label: 'Public Limited' },
-  { value: 'other-business-type', label: 'Other' },
-];
-
-const COMMON_COMPANIES = [
-  'Tata Consultancy Services', 'Reliance Industries', 'Infosys', 'Wipro',
-  'HCL Technologies', 'Tech Mahindra', 'ICICI Bank', 'HDFC Bank',
-  'State Bank of India', 'Axis Bank', 'Kotak Mahindra Bank',
-  'Bharti Airtel', 'ITC Limited', 'Larsen & Toubro', 'Maruti Suzuki',
-  'Mahindra & Mahindra', 'Adani Enterprises', 'Flipkart', 'Amazon India',
-  'Google India', 'Microsoft India', 'IBM India', 'Accenture India',
-  'Deloitte India', 'PricewaterhouseCoopers', 'Ernst & Young', 'KPMG India',
-];
-
-export default function Step5Employment({ formData, updateFields, errors }) {
-  const {
-    loanType, employmentType,
-    companyName, designation, monthlyNetSalary, yearsOfExperience,
-    businessName, businessType, annualTurnover, yearsInBusiness,
-    monthlyIncome, gstNumber, officeAddress,
-  } = formData;
-
-  const isBusinessLoan = loanType === LOAN_TYPES.BUSINESS;
-
-  const filteredOptions = isBusinessLoan
-    ? EMPLOYMENT_OPTIONS.filter((o) => o.value !== EMPLOYMENT_TYPES.SALARIED)
-    : EMPLOYMENT_OPTIONS;
+export default function Step5Employment({ watch, setValue, errors }) {
+  const employmentType = watch('employmentType');
 
   const handleChange = useCallback((field) => (e) => {
     const value = e.target?.value !== undefined ? e.target.value : e;
-    const updates = { [field]: value };
+    setValue(field, value);
+  }, [setValue]);
 
-    if (field === 'employmentType' && value !== employmentType) {
-      updates.companyName = '';
-      updates.designation = '';
-      updates.monthlyNetSalary = '';
-      updates.yearsOfExperience = '';
-      updates.businessName = '';
-      updates.businessType = '';
-      updates.annualTurnover = '';
-      updates.yearsInBusiness = '';
-      updates.monthlyIncome = '';
-      updates.gstNumber = '';
-      updates.officeAddress = '';
-    }
-
-    updateFields(updates);
-  }, [updateFields, employmentType]);
-
-  const isSalaried = employmentType === EMPLOYMENT_TYPES.SALARIED;
-  const isSelfEmployed = employmentType === EMPLOYMENT_TYPES.SELF_EMPLOYED;
-  const isBusinessOwner = employmentType === EMPLOYMENT_TYPES.BUSINESS_OWNER;
+  const err = (f) => errors[f]?.message;
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
       <h2 className="text-2xl font-semibold text-gray-800 mb-6">Employment & Income Details</h2>
 
-      {isBusinessLoan && (
-        <div className="bg-warning bg-opacity-10 border border-warning rounded-lg p-3 mb-6 text-sm text-warning-800">
-          Business loan requires Self-Employed or Business Owner employment type.
-        </div>
-      )}
-
       <RadioGroup
         label="Employment Type"
         name="employmentType"
-        options={filteredOptions}
+        options={EMPLOYMENT_TYPE_OPTIONS}
         value={employmentType}
-        onChange={handleChange('employmentType')}
+        onChange={(e) => setValue('employmentType', e.target.value)}
         layout="horizontal"
-        error={errors?.employmentType}
+        error={err('employmentType')}
         data-cy="step5-employment-type"
       />
 
-      {isSalaried && (
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-          <h3 className="text-md font-medium text-gray-700 mb-3">Salaried Employee Details</h3>
+      {employmentType === 'Salaried' && (
+        <div className="mt-6 space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <h3 className="text-md font-medium text-gray-700">Salary Details</h3>
           <Input
             label="Company Name"
-            value={companyName}
+            value={watch('companyName')}
             onChange={handleChange('companyName')}
-            error={errors?.companyName}
-            placeholder="Enter company name"
+            error={err('companyName')}
+            placeholder="Full legal name of company"
             autoComplete="organization"
-            list="company-names"
             data-cy="step5-company-name"
           />
-          <datalist id="company-names">
-            {COMMON_COMPANIES.map((c) => (
-              <option key={c} value={c} />
-            ))}
-          </datalist>
           <Input
             label="Designation"
-            value={designation}
+            value={watch('designation')}
             onChange={handleChange('designation')}
-            error={errors?.designation}
-            placeholder="Enter your designation"
+            error={err('designation')}
+            placeholder="Your job title"
+            autoComplete="organization-title"
             data-cy="step5-designation"
           />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              label="Monthly Net Salary (₹)"
-              value={monthlyNetSalary}
-              onChange={handleChange('monthlyNetSalary')}
-              error={errors?.monthlyNetSalary}
-              placeholder="Minimum ₹15,000"
-              inputMode="numeric"
-              data-cy="step5-monthly-salary"
-            />
-            <Input
-              label="Years of Experience"
-              value={yearsOfExperience}
-              onChange={handleChange('yearsOfExperience')}
-              error={errors?.yearsOfExperience}
-              placeholder="Total years"
-              inputMode="numeric"
-              data-cy="step5-experience"
-            />
-          </div>
+          <Input
+            label="Monthly Net Salary (₹)"
+            type="number"
+            value={watch('monthlyNetSalary')}
+            onChange={handleChange('monthlyNetSalary')}
+            error={err('monthlyNetSalary')}
+            placeholder="Minimum ₹15,000"
+            inputMode="numeric"
+            data-cy="step5-monthly-salary"
+          />
+          <Input
+            label="Years of Experience"
+            type="number"
+            value={watch('yearsOfExperience')}
+            onChange={handleChange('yearsOfExperience')}
+            error={err('yearsOfExperience')}
+            placeholder="Total years of work experience"
+            inputMode="numeric"
+            data-cy="step5-experience"
+          />
         </div>
       )}
 
-      {(isSelfEmployed || isBusinessOwner) && (
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-          <h3 className="text-md font-medium text-gray-700 mb-3">
-            {isBusinessOwner ? 'Business Owner Details' : 'Self-Employed Details'}
-          </h3>
+      {employmentType === 'Self-Employed' && (
+        <div className="mt-6 space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <h3 className="text-md font-medium text-gray-700">Self-Employment Details</h3>
           <Input
             label="Business Name"
-            value={businessName}
+            value={watch('businessName')}
             onChange={handleChange('businessName')}
-            error={errors?.businessName}
-            placeholder="Enter business name"
+            error={err('businessName')}
+            placeholder="Business / firm name"
+            autoComplete="organization"
             data-cy="step5-business-name"
           />
           <Select
             label="Business Type"
-            placeholder="Select business type"
-            options={BUSINESS_TYPE_OPTIONS}
-            value={businessType}
+            value={watch('businessType')}
             onChange={handleChange('businessType')}
-            error={errors?.businessType}
+            error={err('businessType')}
+            options={BUSINESS_TYPES}
+            placeholder="Select business type"
             data-cy="step5-business-type"
           />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              label="Annual Turnover (₹)"
-              value={annualTurnover}
-              onChange={handleChange('annualTurnover')}
-              error={errors?.annualTurnover}
-              placeholder="Minimum ₹3,00,000"
-              inputMode="numeric"
-              data-cy="step5-annual-turnover"
-            />
-            <Input
-              label="Years in Business"
-              value={yearsInBusiness}
-              onChange={handleChange('yearsInBusiness')}
-              error={errors?.yearsInBusiness}
-              placeholder="Minimum 2 years"
-              inputMode="numeric"
-              data-cy="step5-years-business"
-            />
-          </div>
+          <Input
+            label="Annual Turnover (₹)"
+            type="number"
+            value={watch('annualTurnover')}
+            onChange={handleChange('annualTurnover')}
+            error={err('annualTurnover')}
+            placeholder="Minimum ₹3,00,000"
+            inputMode="numeric"
+            data-cy="step5-annual-turnover"
+          />
+          <Input
+            label="Years in Business"
+            type="number"
+            value={watch('yearsInBusiness')}
+            onChange={handleChange('yearsInBusiness')}
+            error={err('yearsInBusiness')}
+            placeholder="Minimum 2 years"
+            inputMode="numeric"
+            data-cy="step5-years-business"
+          />
           <Input
             label="Monthly Income (₹)"
-            value={monthlyIncome}
+            type="number"
+            value={watch('monthlyIncome')}
             onChange={handleChange('monthlyIncome')}
-            error={errors?.monthlyIncome}
-            placeholder="Enter average monthly income"
+            error={err('monthlyIncome')}
+            placeholder="Average monthly income from business"
             inputMode="numeric"
             data-cy="step5-monthly-income"
           />
-          {isBusinessOwner && (
-            <>
-              <Input
-                label="GST Number"
-                value={gstNumber}
-                onChange={handleChange('gstNumber')}
-                error={errors?.gstNumber}
-                placeholder="e.g., 29AAAAA0000A1Z5"
-                data-cy="step5-gst-number"
-              />
-              <Input
-                label="Office / Business Address"
-                value={officeAddress}
-                onChange={handleChange('officeAddress')}
-                error={errors?.officeAddress}
-                placeholder="Enter office or business address"
-                data-cy="step5-office-address"
-              />
-            </>
-          )}
+        </div>
+      )}
+
+      {employmentType === 'Business Owner' && (
+        <div className="mt-6 space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+          <h3 className="text-md font-medium text-gray-700">Business Details</h3>
+          <Input
+            label="Business Name"
+            value={watch('businessName')}
+            onChange={handleChange('businessName')}
+            error={err('businessName')}
+            placeholder="Registered business name"
+            autoComplete="organization"
+            data-cy="step5-business-name"
+          />
+          <Select
+            label="Business Type"
+            value={watch('businessType')}
+            onChange={handleChange('businessType')}
+            error={err('businessType')}
+            options={BUSINESS_TYPES}
+            placeholder="Select business type"
+            data-cy="step5-business-type"
+          />
+          <Input
+            label="Annual Turnover (₹)"
+            type="number"
+            value={watch('annualTurnover')}
+            onChange={handleChange('annualTurnover')}
+            error={err('annualTurnover')}
+            placeholder="Minimum ₹3,00,000"
+            inputMode="numeric"
+            data-cy="step5-annual-turnover"
+          />
+          <Input
+            label="Years in Business"
+            type="number"
+            value={watch('yearsInBusiness')}
+            onChange={handleChange('yearsInBusiness')}
+            error={err('yearsInBusiness')}
+            placeholder="Minimum 2 years"
+            inputMode="numeric"
+            data-cy="step5-years-business"
+          />
+          <Input
+            label="GST Number"
+            value={watch('gstNumber')}
+            onChange={handleChange('gstNumber')}
+            error={err('gstNumber')}
+            placeholder="15-character GSTIN"
+            data-cy="step5-gst-number"
+          />
+          <Input
+            label="Office / Business Address"
+            value={watch('officeAddress')}
+            onChange={handleChange('officeAddress')}
+            error={err('officeAddress')}
+            placeholder="Registered office address"
+            autoComplete="street-address"
+            data-cy="step5-office-address"
+          />
         </div>
       )}
     </div>

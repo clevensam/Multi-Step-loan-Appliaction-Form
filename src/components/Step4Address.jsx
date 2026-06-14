@@ -5,14 +5,23 @@ import Checkbox from './common/Checkbox';
 import usePinCodeLookup from '../hooks/usePinCodeLookup';
 import { RESIDENCE_TYPES } from '../constants';
 
-export default function Step4Address({ formData, updateFields, errors }) {
-  const {
-    currentAddressLine1, currentAddressLine2, pinCode, city, state,
-    residenceType, rentAmount, yearsAtAddress,
-    previousAddressLine1, previousAddressLine2, isSameAsPermanent,
-    permanentAddressLine1, permanentAddressLine2, permanentPinCode,
-    permanentCity, permanentState,
-  } = formData;
+export default function Step4Address({ watch, setValue, errors }) {
+  const currentAddressLine1 = watch('currentAddressLine1');
+  const currentAddressLine2 = watch('currentAddressLine2');
+  const pinCode = watch('pinCode');
+  const city = watch('city');
+  const state = watch('state');
+  const residenceType = watch('residenceType');
+  const rentAmount = watch('rentAmount');
+  const yearsAtAddress = watch('yearsAtAddress');
+  const previousAddressLine1 = watch('previousAddressLine1');
+  const previousAddressLine2 = watch('previousAddressLine2');
+  const isSameAsPermanent = watch('isSameAsPermanent');
+  const permanentAddressLine1 = watch('permanentAddressLine1');
+  const permanentAddressLine2 = watch('permanentAddressLine2');
+  const permanentPinCode = watch('permanentPinCode');
+  const permanentCity = watch('permanentCity');
+  const permanentState = watch('permanentState');
 
   const pinLookup = usePinCodeLookup(pinCode);
   const permanentPinLookup = usePinCodeLookup(permanentPinCode);
@@ -23,19 +32,20 @@ export default function Step4Address({ formData, updateFields, errors }) {
 
   useEffect(() => {
     if (pinLookup.city && pinLookup.state && !userEdited.current.city && !userEdited.current.state) {
-      updateFields({ city: pinLookup.city, state: pinLookup.state });
+      setValue('city', pinLookup.city);
+      setValue('state', pinLookup.state);
     }
-  }, [pinLookup.city, pinLookup.state, updateFields]);
+  }, [pinLookup.city, pinLookup.state, setValue]);
 
   useEffect(() => {
     if (permanentPinLookup.city && permanentPinLookup.state && !userEdited.current.permCity && !userEdited.current.permState) {
-      updateFields({ permanentCity: permanentPinLookup.city, permanentState: permanentPinLookup.state });
+      setValue('permanentCity', permanentPinLookup.city);
+      setValue('permanentState', permanentPinLookup.state);
     }
-  }, [permanentPinLookup.city, permanentPinLookup.state, updateFields]);
+  }, [permanentPinLookup.city, permanentPinLookup.state, setValue]);
 
   const handleChange = useCallback((field) => (e) => {
     const value = e.target?.type === 'checkbox' ? e.target.checked : e.target?.value !== undefined ? e.target.value : e;
-    const updates = { [field]: value };
 
     if (field === 'city') userEdited.current.city = true;
     if (field === 'state') userEdited.current.state = true;
@@ -43,39 +53,31 @@ export default function Step4Address({ formData, updateFields, errors }) {
     if (field === 'permanentState') userEdited.current.permState = true;
 
     if (field === 'isSameAsPermanent' && value) {
-      updates.permanentAddressLine1 = currentAddressLine1 || '';
-      updates.permanentAddressLine2 = currentAddressLine2 || '';
-      updates.permanentPinCode = pinCode || '';
-      updates.permanentCity = city || '';
-      updates.permanentState = state || '';
+      setValue('permanentAddressLine1', currentAddressLine1 || '');
+      setValue('permanentAddressLine2', currentAddressLine2 || '');
+      setValue('permanentPinCode', pinCode || '');
+      setValue('permanentCity', city || '');
+      setValue('permanentState', state || '');
     }
 
-    if (field === 'pinCode') {
-      userEdited.current.city = false;
-      userEdited.current.state = false;
-    }
-
-    if (field === 'permanentPinCode') {
-      userEdited.current.permCity = false;
-      userEdited.current.permState = false;
-    }
-
-    updateFields(updates);
-  }, [updateFields, currentAddressLine1, currentAddressLine2, pinCode, city, state]);
+    setValue(field, value);
+  }, [setValue, currentAddressLine1, currentAddressLine2, pinCode, city, state]);
 
   const handlePinChange = useCallback((e) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 6);
     userEdited.current.city = false;
     userEdited.current.state = false;
-    updateFields({ pinCode: value });
-  }, [updateFields]);
+    setValue('pinCode', value);
+  }, [setValue]);
 
   const handlePermanentPinChange = useCallback((e) => {
     const value = e.target.value.replace(/\D/g, '').slice(0, 6);
     userEdited.current.permCity = false;
     userEdited.current.permState = false;
-    updateFields({ permanentPinCode: value });
-  }, [updateFields]);
+    setValue('permanentPinCode', value);
+  }, [setValue]);
+
+  const err = (f) => errors[f]?.message;
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
@@ -87,7 +89,7 @@ export default function Step4Address({ formData, updateFields, errors }) {
         label="Address Line 1"
         value={currentAddressLine1}
         onChange={handleChange('currentAddressLine1')}
-        error={errors?.currentAddressLine1}
+        error={err('currentAddressLine1')}
         placeholder="House / Flat / Door no."
         autoComplete="address-line1"
         data-cy="step4-addr-line1"
@@ -108,7 +110,7 @@ export default function Step4Address({ formData, updateFields, errors }) {
             label="PIN Code"
             value={pinCode}
             onChange={handlePinChange}
-            error={errors?.pinCode || pinLookup.error}
+            error={err('pinCode') || pinLookup.error}
             placeholder="6-digit PIN"
             autoComplete="postal-code"
             data-cy="step4-pincode"
@@ -122,7 +124,7 @@ export default function Step4Address({ formData, updateFields, errors }) {
             userEdited.current.city = true;
             handleChange('city')(e);
           }}
-          error={errors?.city}
+          error={err('city')}
           placeholder="City / Town"
           autoComplete="address-level2"
           data-cy="step4-city"
@@ -134,7 +136,7 @@ export default function Step4Address({ formData, updateFields, errors }) {
             userEdited.current.state = true;
             handleChange('state')(e);
           }}
-          error={errors?.state}
+          error={err('state')}
           placeholder="State"
           autoComplete="address-level1"
           data-cy="step4-state"
@@ -148,7 +150,7 @@ export default function Step4Address({ formData, updateFields, errors }) {
         value={residenceType}
         onChange={handleChange('residenceType')}
         layout="horizontal"
-        error={errors?.residenceType}
+        error={err('residenceType')}
         data-cy="step4-residence-type"
       />
 
@@ -157,7 +159,7 @@ export default function Step4Address({ formData, updateFields, errors }) {
           label="Monthly Rent Amount"
           value={rentAmount}
           onChange={handleChange('rentAmount')}
-          error={errors?.rentAmount}
+          error={err('rentAmount')}
           placeholder="Enter monthly rent"
           data-cy="step4-rent-amount"
         />
@@ -167,7 +169,7 @@ export default function Step4Address({ formData, updateFields, errors }) {
         label="Years at Current Address"
         value={yearsAtAddress}
         onChange={handleChange('yearsAtAddress')}
-        error={errors?.yearsAtAddress}
+        error={err('yearsAtAddress')}
         placeholder="Number of years (0-50)"
         inputMode="numeric"
         data-cy="step4-years-addr"
@@ -180,7 +182,7 @@ export default function Step4Address({ formData, updateFields, errors }) {
             label="Previous Address Line 1"
             value={previousAddressLine1}
             onChange={handleChange('previousAddressLine1')}
-            error={errors?.previousAddressLine1}
+            error={err('previousAddressLine1')}
             placeholder="Previous house / flat no."
             data-cy="step4-prev-addr-line1"
           />
@@ -210,7 +212,7 @@ export default function Step4Address({ formData, updateFields, errors }) {
               label="Permanent Address Line 1"
               value={permanentAddressLine1}
               onChange={handleChange('permanentAddressLine1')}
-              error={errors?.permanentAddressLine1}
+              error={err('permanentAddressLine1')}
               placeholder="Permanent house / flat no."
               data-cy="step4-perm-addr-line1"
             />
@@ -227,7 +229,7 @@ export default function Step4Address({ formData, updateFields, errors }) {
                   label="PIN Code"
                   value={permanentPinCode}
                   onChange={handlePermanentPinChange}
-                  error={errors?.permanentPinCode || permanentPinLookup.error}
+                  error={err('permanentPinCode') || permanentPinLookup.error}
                   placeholder="6-digit PIN"
                   autoComplete="postal-code"
                   data-cy="step4-perm-pincode"
@@ -241,7 +243,7 @@ export default function Step4Address({ formData, updateFields, errors }) {
                   userEdited.current.permCity = true;
                   handleChange('permanentCity')(e);
                 }}
-                error={errors?.permanentCity}
+                error={err('permanentCity')}
                 placeholder="City"
                 autoComplete="address-level2"
                 data-cy="step4-perm-city"
@@ -253,7 +255,7 @@ export default function Step4Address({ formData, updateFields, errors }) {
                   userEdited.current.permState = true;
                   handleChange('permanentState')(e);
                 }}
-                error={errors?.permanentState}
+                error={err('permanentState')}
                 placeholder="State"
                 autoComplete="address-level1"
                 data-cy="step4-perm-state"

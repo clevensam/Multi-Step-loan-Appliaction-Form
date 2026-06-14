@@ -48,9 +48,6 @@ export default function step5Schema(formState = {}) {
       .min(1, 'Years in business is required')
       .refine((val) => !Number.isNaN(Number(val)) && Number(val) >= 0, 'Enter a valid number')
       .refine((val) => Number(val) >= 2, 'Minimum 2 years in business required'),
-    monthlyIncome: z.string()
-      .min(1, 'Monthly income is required')
-      .refine((val) => !Number.isNaN(Number(val)) && Number(val) >= 0, 'Enter a valid number'),
     gstNumber: z.string()
       .min(1, 'GST number is required')
       .refine((val) => {

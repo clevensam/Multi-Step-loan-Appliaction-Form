@@ -6,16 +6,16 @@ import MaskedInput from './common/MaskedInput';
 import useVerification from '../hooks/useVerification';
 import { GENDERS, MARITAL_STATUSES } from '../constants';
 
-export default function Step2PersonalInfo({ formData, updateFields, errors }) {
-  const {
-    fullName, dateOfBirth, gender, maritalStatus, fatherName, motherName,
-    email, mobile, alternateMobile,
-  } = formData;
-
-  const handleChange = useCallback((field) => (e) => {
-    const value = e.target?.value !== undefined ? e.target.value : e;
-    updateFields({ [field]: value });
-  }, [updateFields]);
+export default function Step2PersonalInfo({ watch, setValue, errors }) {
+  const fullName = watch('fullName');
+  const dateOfBirth = watch('dateOfBirth');
+  const gender = watch('gender');
+  const maritalStatus = watch('maritalStatus');
+  const fatherName = watch('fatherName');
+  const motherName = watch('motherName');
+  const email = watch('email');
+  const mobile = watch('mobile');
+  const alternateMobile = watch('alternateMobile');
 
   const emailVerification = useVerification({
     type: 'email',
@@ -29,13 +29,12 @@ export default function Step2PersonalInfo({ formData, updateFields, errors }) {
     onVerified: () => {},
   });
 
-  const handleEmailBlur = useCallback((e) => {
-    if (e.target.value) emailVerification.verify();
-  }, [emailVerification]);
+  const handleChange = useCallback((field) => (e) => {
+    const value = e.target?.value !== undefined ? e.target.value : e;
+    setValue(field, value);
+  }, [setValue]);
 
-  const handleMobileBlur = useCallback((e) => {
-    if (e.target.value) mobileVerification.verify();
-  }, [mobileVerification]);
+  const err = (f) => errors[f]?.message;
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
@@ -45,7 +44,7 @@ export default function Step2PersonalInfo({ formData, updateFields, errors }) {
         label="Full Name"
         value={fullName}
         onChange={handleChange('fullName')}
-        error={errors?.fullName}
+        error={err('fullName')}
         placeholder="Enter your full name"
         autoComplete="name"
         data-cy="step2-full-name"
@@ -57,7 +56,7 @@ export default function Step2PersonalInfo({ formData, updateFields, errors }) {
           type="date"
           value={dateOfBirth}
           onChange={handleChange('dateOfBirth')}
-          error={errors?.dateOfBirth}
+          error={err('dateOfBirth')}
           data-cy="step2-dob"
         />
 
@@ -67,7 +66,7 @@ export default function Step2PersonalInfo({ formData, updateFields, errors }) {
           options={GENDERS}
           value={gender}
           onChange={handleChange('gender')}
-          error={errors?.gender}
+          error={err('gender')}
           data-cy="step2-gender"
         />
       </div>
@@ -78,7 +77,7 @@ export default function Step2PersonalInfo({ formData, updateFields, errors }) {
         options={MARITAL_STATUSES}
         value={maritalStatus}
         onChange={handleChange('maritalStatus')}
-        error={errors?.maritalStatus}
+        error={err('maritalStatus')}
         data-cy="step2-marital-status"
       />
 
@@ -87,7 +86,7 @@ export default function Step2PersonalInfo({ formData, updateFields, errors }) {
           label="Father's Name"
           value={fatherName}
           onChange={handleChange('fatherName')}
-          error={errors?.fatherName}
+          error={err('fatherName')}
           placeholder="Enter father's name"
           autoComplete="family-name"
           data-cy="step2-father-name"
@@ -97,7 +96,7 @@ export default function Step2PersonalInfo({ formData, updateFields, errors }) {
           label="Mother's Name"
           value={motherName}
           onChange={handleChange('motherName')}
-          error={errors?.motherName}
+          error={err('motherName')}
           placeholder="Enter mother's name"
           autoComplete="family-name"
           data-cy="step2-mother-name"
@@ -113,8 +112,10 @@ export default function Step2PersonalInfo({ formData, updateFields, errors }) {
             handleChange('email')(e);
             emailVerification.reset();
           }}
-          onBlur={handleEmailBlur}
-          error={errors?.email || emailVerification.error}
+          onBlur={(e) => {
+            if (e.target.value) emailVerification.verify();
+          }}
+          error={err('email') || emailVerification.error}
           placeholder="your@email.com"
           autoComplete="email"
           data-cy="step2-email"
@@ -136,8 +137,10 @@ export default function Step2PersonalInfo({ formData, updateFields, errors }) {
             handleChange('mobile')(e);
             mobileVerification.reset();
           }}
-          onBlur={handleMobileBlur}
-          error={errors?.mobile || mobileVerification.error}
+          onBlur={(e) => {
+            if (e.target.value) mobileVerification.verify();
+          }}
+          error={err('mobile') || mobileVerification.error}
           placeholder="Enter 10-digit mobile"
           autoComplete="tel"
           data-cy="step2-mobile"
@@ -154,7 +157,7 @@ export default function Step2PersonalInfo({ formData, updateFields, errors }) {
         label="Alternate Mobile (optional)"
         value={alternateMobile}
         onChange={handleChange('alternateMobile')}
-        error={errors?.alternateMobile}
+        error={err('alternateMobile')}
         placeholder="Enter alternate mobile number"
         autoComplete="tel"
         data-cy="step2-alternate-mobile"

@@ -74,7 +74,9 @@ Cypress.Commands.add('fillStep5', (data) => {
     cy.get('[data-cy="step5-business-type"] select').select(data.businessType);
     cy.get('[data-cy="step5-annual-turnover"] input').clear().type(data.annualTurnover);
     cy.get('[data-cy="step5-years-business"] input').clear().type(data.yearsInBusiness);
-    cy.get('[data-cy="step5-monthly-income"] input').clear().type(data.monthlyIncome);
+    if (data.employmentType === 'Self-Employed') {
+      cy.get('[data-cy="step5-monthly-income"] input').clear().type(data.monthlyIncome);
+    }
     if (data.employmentType === 'Business Owner') {
       cy.get('[data-cy="step5-gst-number"] input').clear().type(data.gstNumber);
       cy.get('[data-cy="step5-office-address"] input').clear().type(data.officeAddress);

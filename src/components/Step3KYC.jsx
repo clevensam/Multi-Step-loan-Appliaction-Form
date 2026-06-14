@@ -5,18 +5,16 @@ import Input from './common/Input';
 import useVerification from '../hooks/useVerification';
 import { LOAN_TYPES } from '../constants';
 
-export default function Step3KYC({ formData, updateFields, errors }) {
-  const {
-    panNumber, aadhaarNumber, aadhaarConsent, voterId, passport,
-    loanType, loanAmount,
-  } = formData;
+export default function Step3KYC({ watch, setValue, errors }) {
+  const panNumber = watch('panNumber');
+  const aadhaarNumber = watch('aadhaarNumber');
+  const aadhaarConsent = watch('aadhaarConsent');
+  const voterId = watch('voterId');
+  const passport = watch('passport');
+  const loanType = watch('loanType');
+  const loanAmount = watch('loanAmount');
 
   const showPassport = loanType === LOAN_TYPES.HOME && Number(loanAmount) > 500000;
-
-  const handleChange = useCallback((field) => (e) => {
-    const value = e.target?.type === 'checkbox' ? e.target.checked : e.target?.value !== undefined ? e.target.value : e;
-    updateFields({ [field]: value });
-  }, [updateFields]);
 
   const panVerification = useVerification({
     type: 'pan',
@@ -38,6 +36,8 @@ export default function Step3KYC({ formData, updateFields, errors }) {
     if (aadhaarNumber) aadhaarVerification.verify();
   }, [aadhaarNumber, aadhaarVerification]);
 
+  const err = (f) => errors[f]?.message;
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
       <h2 className="text-2xl font-semibold text-gray-800 mb-6">Identity Verification (KYC)</h2>
@@ -49,11 +49,11 @@ export default function Step3KYC({ formData, updateFields, errors }) {
           showMasked={false}
           value={panNumber}
           onChange={(e) => {
-            handleChange('panNumber')(e);
+            setValue('panNumber', e.target.value);
             panVerification.reset();
           }}
           onBlur={handlePanBlur}
-          error={errors?.panNumber || panVerification.error}
+          error={err('panNumber') || panVerification.error}
           placeholder="Enter PAN (e.g., AAAAA9999A)"
           data-cy="step3-pan"
         />
@@ -72,11 +72,11 @@ export default function Step3KYC({ formData, updateFields, errors }) {
           showMasked={false}
           value={aadhaarNumber}
           onChange={(e) => {
-            handleChange('aadhaarNumber')(e);
+            setValue('aadhaarNumber', e.target.value);
             aadhaarVerification.reset();
           }}
           onBlur={handleAadhaarBlur}
-          error={errors?.aadhaarNumber || aadhaarVerification.error}
+          error={err('aadhaarNumber') || aadhaarVerification.error}
           placeholder="Enter 12-digit Aadhaar"
           data-cy="step3-aadhaar"
         />
@@ -91,16 +91,16 @@ export default function Step3KYC({ formData, updateFields, errors }) {
       <Checkbox
         label="I consent to Aadhaar-based verification as per UIDAI guidelines"
         checked={aadhaarConsent}
-        onChange={handleChange('aadhaarConsent')}
-        error={errors?.aadhaarConsent}
+        onChange={(e) => setValue('aadhaarConsent', e.target.checked)}
+        error={err('aadhaarConsent')}
         data-cy="step3-aadhaar-consent"
       />
 
       <Input
         label="Voter ID (optional)"
         value={voterId}
-        onChange={handleChange('voterId')}
-        error={errors?.voterId}
+        onChange={(e) => setValue('voterId', e.target.value)}
+        error={err('voterId')}
         placeholder="Format: ABC1234567"
         data-cy="step3-voter-id"
       />
@@ -109,8 +109,8 @@ export default function Step3KYC({ formData, updateFields, errors }) {
         <Input
           label="Passport Number"
           value={passport}
-          onChange={handleChange('passport')}
-          error={errors?.passport}
+          onChange={(e) => setValue('passport', e.target.value)}
+          error={err('passport')}
           placeholder="Format: A1234567"
           data-cy="step3-passport"
         />

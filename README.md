@@ -63,15 +63,14 @@ An 8-step loan application form wizard with conditional logic, cross-step valida
 
 The Wizard pattern with a step registry (`STEPS` array in `constants.js`) keeps all orchestration in one component (`Wizard.jsx`) while delegating rendering to per-step components.
 
-### Why plain state (not react-hook-form)?
+### Why react-hook-form (not plain state)?
 
-React Hook Form is installed but not used. The decision was deliberate:
+React Hook Form manages all form state and validation:
 
-- When loan type changes, 15+ fields across 3 steps must be cleared (employment, co-applicant, documents). RHF's `reset` API requires reconstructing the entire form state, while the `updateFields` callback pattern does partial, scoped resets naturally.
-- The `errors` object is managed as flat `{ fieldName: message }` — RHF's nested errors structure adds complexity for cross-step error clearing.
-- No performance benefit from RHF's uncontrolled inputs since step transitions batch-validate all fields in the current step anyway.
-
-RHF would be the right choice for a simpler form; for this highly interdependent multi-step flow, manual state gives finer control.
+- **Controlled + uncontrolled** — Each step component uses RHF's `watch`/`setValue` for controlled fields (radio groups, checkboxes) and `register` for uncontrolled inputs (text, number, select).
+- **Schema-driven validation** — Zod schemas are generated per step via `schemaFactory.js` and passed as the RHF resolver. Cross-step dependencies are handled by accepting full form state in each schema function.
+- **Cross-step field clearing** — When loan type or employment type changes, `useEffect` in the step component calls `setValue` to reset dependent fields across steps.
+- **Performance** — RHF's isolated re-renders keep step transitions fast. The `useStepForm` hook wraps RHF's `useForm` with step-aware defaults.
 
 ### Why Zod over Yup?
 
@@ -94,7 +93,7 @@ The `z.discriminatedUnion` was the deciding factor: Step 5 schema switches betwe
 | Framework | React 19 (Vite 8) |
 | Styling | Tailwind CSS 3 |
 | Validation | Zod 4 + custom validators |
-| Forms | Manual `useState` (see decision above) |
+| Forms | react-hook-form + @hookform/resolvers |
 | File upload | react-dropzone 15 |
 | E-signature | react-signature-canvas |
 | Encryption | Web Crypto API (AES-256-GCM) |
@@ -199,6 +198,7 @@ loan-application/
 │   ├── hooks/
 │   │   ├── useAutoSave.js         Debounced encrypted auto-save
 │   │   ├── useFormPersistence.js  Resume/start-fresh on mount
+│   │   ├── useStepForm.js         Wraps RHF useForm with step-aware resolver
 │   │   ├── useVerification.js     Simulated async verification
 │   │   └── usePinCodeLookup.js    PIN → city/state/PO lookup
 │   ├── schemas/

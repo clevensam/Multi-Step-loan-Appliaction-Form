@@ -52,26 +52,27 @@ function getTenureOptions(loanType) {
   return options;
 }
 
-export default function Step1LoanType({ formData, updateFields, errors }) {
-  const { loanType, loanAmount, loanTenure, loanPurpose, referralCode } = formData;
+export default function Step1LoanType({ watch, setValue, errors }) {
+  const loanType = watch('loanType');
+  const loanAmount = watch('loanAmount');
+  const loanTenure = watch('loanTenure');
+  const loanPurpose = watch('loanPurpose');
+  const referralCode = watch('referralCode');
+
   const amountRange = AMOUNT_RANGES[loanType] || { min: 50000, max: 1000000 };
   const purposes = PURPOSE_OPTIONS[loanType] || [];
 
   const handleChange = useCallback((field) => (e) => {
     const value = e.target?.value !== undefined ? e.target.value : e;
-    const updates = { [field]: value };
-
     if (field === 'loanType' && value !== loanType) {
-      const newAmountRange = AMOUNT_RANGES[value];
-      if (newAmountRange) {
-        updates.loanAmount = '';
-      }
-      updates.loanTenure = '';
-      updates.loanPurpose = '';
+      setValue('loanAmount', '');
+      setValue('loanTenure', '');
+      setValue('loanPurpose', '');
     }
+    setValue(field, value);
+  }, [setValue, loanType]);
 
-    updateFields(updates);
-  }, [updateFields, loanType]);
+  const err = (f) => errors[f]?.message;
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
@@ -82,9 +83,9 @@ export default function Step1LoanType({ formData, updateFields, errors }) {
         name="loanType"
         options={LOAN_TYPE_OPTIONS}
         value={loanType}
-        onChange={handleChange('loanType')}
+        onChange={(e) => handleChange('loanType')(e)}
+        error={err('loanType')}
         layout="horizontal"
-        error={errors?.loanType}
         data-cy="step1-loan-type"
       />
 
@@ -93,8 +94,8 @@ export default function Step1LoanType({ formData, updateFields, errors }) {
           <CurrencyInput
             label={`Loan Amount (₹${amountRange.min.toLocaleString('en-IN')} – ₹${amountRange.max.toLocaleString('en-IN')})`}
             value={loanAmount}
-            onChange={handleChange('loanAmount')}
-            error={errors?.loanAmount}
+            onChange={(e) => handleChange('loanAmount')(e)}
+            error={err('loanAmount')}
             data-cy="step1-loan-amount"
           />
 
@@ -103,8 +104,8 @@ export default function Step1LoanType({ formData, updateFields, errors }) {
             placeholder="Select tenure"
             options={getTenureOptions(loanType)}
             value={loanTenure}
-            onChange={handleChange('loanTenure')}
-            error={errors?.loanTenure}
+            onChange={(e) => handleChange('loanTenure')(e)}
+            error={err('loanTenure')}
             data-cy="step1-loan-tenure"
           />
 
@@ -113,15 +114,15 @@ export default function Step1LoanType({ formData, updateFields, errors }) {
             placeholder="Select purpose"
             options={purposes}
             value={loanPurpose}
-            onChange={handleChange('loanPurpose')}
-            error={errors?.loanPurpose}
+            onChange={(e) => handleChange('loanPurpose')(e)}
+            error={err('loanPurpose')}
             data-cy="step1-loan-purpose"
           />
 
           <Input
             label="Referral Code (optional)"
             value={referralCode}
-            onChange={handleChange('referralCode')}
+            onChange={(e) => handleChange('referralCode')(e)}
             placeholder="Enter referral code"
             data-cy="step1-referral-code"
           />

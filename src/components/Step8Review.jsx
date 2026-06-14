@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import Checkbox from './common/Checkbox';
-import { LOAN_TYPES, LOAN_TYPE_LABELS, EMPLOYMENT_TYPES } from '../constants';
+import { LOAN_TYPES, LOAN_TYPE_LABELS, EMPLOYMENT_TYPES, STEP_6_THRESHOLDS } from '../constants';
 import { getPreApprovalSummary } from '../utils/emiCalculator';
 import { formatIndian } from '../utils/formatCurrency';
 import { getRequiredDocs, DOCUMENT_SPECS } from '../schemas/step7Schema';
@@ -62,28 +62,32 @@ function FieldRow({ label, value, highlight }) {
   );
 }
 
-export default function Step8Review({ formData, updateFields, errors, goToStep }) {
+export default function Step8Review({ watch, setValue, errors, goToStep }) {
+  const fd = watch();
+
+  const showCoApplicant = useMemo(() => {
+    if (!fd.loanType || !fd.loanAmount) return false;
+    const threshold = STEP_6_THRESHOLDS[fd.loanType];
+    return fd.loanType === LOAN_TYPES.HOME || Number(fd.loanAmount) > threshold;
+  }, [fd.loanType, fd.loanAmount]);
+
   const summary = useMemo(() => {
-    if (!formData.loanType || !formData.loanAmount || !formData.loanTenure) return null;
-    return getPreApprovalSummary(
-      formData.loanType,
-      Number(formData.loanAmount),
-      Number(formData.loanTenure),
-    );
-  }, [formData.loanType, formData.loanAmount, formData.loanTenure]);
+    if (!fd.loanType || !fd.loanAmount || !fd.loanTenure) return null;
+    return getPreApprovalSummary(fd.loanType, Number(fd.loanAmount), Number(fd.loanTenure));
+  }, [fd.loanType, fd.loanAmount, fd.loanTenure]);
 
   const totalMonthlyIncome = useMemo(() => {
     let income = 0;
-    if (formData.employmentType === EMPLOYMENT_TYPES.SALARIED) {
-      income = Number(formData.monthlyNetSalary) || 0;
+    if (fd.employmentType === EMPLOYMENT_TYPES.SALARIED) {
+      income = Number(fd.monthlyNetSalary) || 0;
     } else {
-      income = Number(formData.monthlyIncome) || 0;
+      income = Number(fd.monthlyIncome) || 0;
     }
-    if (formData.coApplicantIncome) {
-      income += Number(formData.coApplicantIncome) || 0;
+    if (fd.coApplicantIncome) {
+      income += Number(fd.coApplicantIncome) || 0;
     }
     return income;
-  }, [formData]);
+  }, [fd]);
 
   const emiRatio = useMemo(() => {
     if (!summary || totalMonthlyIncome === 0) return 0;
@@ -91,16 +95,17 @@ export default function Step8Review({ formData, updateFields, errors, goToStep }
   }, [summary, totalMonthlyIncome]);
 
   const formStateWithVerified = useMemo(() => ({
-    ...formData,
-    panVerified: !!(formData.panNumber && formData.panNumber.length === 10),
-  }), [formData]);
+    ...fd,
+    panVerified: !!(fd.panNumber && fd.panNumber.length === 10),
+  }), [fd]);
 
   const requiredDocs = useMemo(() => getRequiredDocs(formStateWithVerified), [formStateWithVerified]);
 
-  const handleConsentChange = (field) => (e) => {
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-    updateFields({ [field]: value });
-  };
+  const handleConsentChange = useCallback((field) => (e) => {
+    setValue(field, e.target.checked);
+  }, [setValue]);
+
+  const err = (f) => errors[f]?.message;
 
   return (
     <div className="space-y-6">
@@ -111,74 +116,74 @@ export default function Step8Review({ formData, updateFields, errors, goToStep }
         </p>
 
         <SectionCard title="Loan Type & Basic Info" onEdit={() => goToStep(0)}>
-          <FieldRow label="Loan Type" value={LOAN_TYPE_LABELS[formData.loanType]} />
-          <FieldRow label="Loan Amount" value={formData.loanAmount ? formatIndian(formData.loanAmount) : null} />
-          <FieldRow label="Tenure" value={formData.loanTenure ? `${formData.loanTenure} months` : null} />
-          <FieldRow label="Purpose" value={formData.loanPurpose} />
-          {formData.referralCode && <FieldRow label="Referral Code" value={formData.referralCode} />}
+          <FieldRow label="Loan Type" value={LOAN_TYPE_LABELS[fd.loanType]} />
+          <FieldRow label="Loan Amount" value={fd.loanAmount ? formatIndian(fd.loanAmount) : null} />
+          <FieldRow label="Tenure" value={fd.loanTenure ? `${fd.loanTenure} months` : null} />
+          <FieldRow label="Purpose" value={fd.loanPurpose} />
+          {fd.referralCode && <FieldRow label="Referral Code" value={fd.referralCode} />}
         </SectionCard>
 
         <SectionCard title="Personal Information" onEdit={() => goToStep(1)}>
-          <FieldRow label="Full Name" value={formData.fullName} />
-          <FieldRow label="Date of Birth" value={formData.dateOfBirth} />
-          <FieldRow label="Gender" value={formData.gender} />
-          <FieldRow label="Marital Status" value={formData.maritalStatus} />
-          <FieldRow label="Father&apos;s Name" value={formData.fatherName} />
-          <FieldRow label="Mother&apos;s Name" value={formData.motherName} />
-          <FieldRow label="Email" value={formData.email} />
-          <FieldRow label="Mobile" value={formData.mobile} />
-          {formData.alternateMobile && <FieldRow label="Alternate Mobile" value={formData.alternateMobile} />}
+          <FieldRow label="Full Name" value={fd.fullName} />
+          <FieldRow label="Date of Birth" value={fd.dateOfBirth} />
+          <FieldRow label="Gender" value={fd.gender} />
+          <FieldRow label="Marital Status" value={fd.maritalStatus} />
+          <FieldRow label="Father&apos;s Name" value={fd.fatherName} />
+          <FieldRow label="Mother&apos;s Name" value={fd.motherName} />
+          <FieldRow label="Email" value={fd.email} />
+          <FieldRow label="Mobile" value={fd.mobile} />
+          {fd.alternateMobile && <FieldRow label="Alternate Mobile" value={fd.alternateMobile} />}
         </SectionCard>
 
         <SectionCard title="Identity Verification (KYC)" onEdit={() => goToStep(2)}>
-          <FieldRow label="PAN" value={maskPAN(formData.panNumber)} />
-          <FieldRow label="Aadhaar" value={maskAadhaar(formData.aadhaarNumber)} />
-          <FieldRow label="Voter ID" value={formData.voterId} />
-          {formData.passport && <FieldRow label="Passport" value={formData.passport} />}
+          <FieldRow label="PAN" value={maskPAN(fd.panNumber)} />
+          <FieldRow label="Aadhaar" value={maskAadhaar(fd.aadhaarNumber)} />
+          <FieldRow label="Voter ID" value={fd.voterId} />
+          {fd.passport && <FieldRow label="Passport" value={fd.passport} />}
         </SectionCard>
 
         <SectionCard title="Address Information" onEdit={() => goToStep(3)}>
-          <FieldRow label="Address" value={formData.currentAddressLine1} />
-          {formData.currentAddressLine2 && <FieldRow label="Address Line 2" value={formData.currentAddressLine2} />}
-          <FieldRow label="PIN Code" value={formData.pinCode} />
-          <FieldRow label="City" value={formData.city} />
-          <FieldRow label="State" value={formData.state} />
-          <FieldRow label="Residence Type" value={formData.residenceType} />
-          <FieldRow label="Years at Address" value={formData.yearsAtAddress ? `${formData.yearsAtAddress} yr(s)` : null} />
+          <FieldRow label="Address" value={fd.currentAddressLine1} />
+          {fd.currentAddressLine2 && <FieldRow label="Address Line 2" value={fd.currentAddressLine2} />}
+          <FieldRow label="PIN Code" value={fd.pinCode} />
+          <FieldRow label="City" value={fd.city} />
+          <FieldRow label="State" value={fd.state} />
+          <FieldRow label="Residence Type" value={fd.residenceType} />
+          <FieldRow label="Years at Address" value={fd.yearsAtAddress ? `${fd.yearsAtAddress} yr(s)` : null} />
         </SectionCard>
 
         <SectionCard title="Employment & Income" onEdit={() => goToStep(4)}>
-          <FieldRow label="Employment Type" value={formData.employmentType} />
-          {formData.employmentType === EMPLOYMENT_TYPES.SALARIED && (
+          <FieldRow label="Employment Type" value={fd.employmentType} />
+          {fd.employmentType === EMPLOYMENT_TYPES.SALARIED && (
             <>
-              <FieldRow label="Company" value={formData.companyName} />
-              <FieldRow label="Designation" value={formData.designation} />
-              <FieldRow label="Monthly Salary" value={formData.monthlyNetSalary ? formatIndian(formData.monthlyNetSalary) : null} />
-              <FieldRow label="Experience" value={formData.yearsOfExperience ? `${formData.yearsOfExperience} yr(s)` : null} />
+              <FieldRow label="Company" value={fd.companyName} />
+              <FieldRow label="Designation" value={fd.designation} />
+              <FieldRow label="Monthly Salary" value={fd.monthlyNetSalary ? formatIndian(fd.monthlyNetSalary) : null} />
+              <FieldRow label="Experience" value={fd.yearsOfExperience ? `${fd.yearsOfExperience} yr(s)` : null} />
             </>
           )}
-          {(formData.employmentType === EMPLOYMENT_TYPES.SELF_EMPLOYED || formData.employmentType === EMPLOYMENT_TYPES.BUSINESS_OWNER) && (
+          {(fd.employmentType === EMPLOYMENT_TYPES.SELF_EMPLOYED || fd.employmentType === EMPLOYMENT_TYPES.BUSINESS_OWNER) && (
             <>
-              <FieldRow label="Business Name" value={formData.businessName} />
-              <FieldRow label="Business Type" value={formData.businessType} />
-              <FieldRow label="Annual Turnover" value={formData.annualTurnover ? formatIndian(formData.annualTurnover) : null} />
-              <FieldRow label="Monthly Income" value={formData.monthlyIncome ? formatIndian(formData.monthlyIncome) : null} />
+              <FieldRow label="Business Name" value={fd.businessName} />
+              <FieldRow label="Business Type" value={fd.businessType} />
+              <FieldRow label="Annual Turnover" value={fd.annualTurnover ? formatIndian(fd.annualTurnover) : null} />
+              <FieldRow label="Monthly Income" value={fd.monthlyIncome ? formatIndian(fd.monthlyIncome) : null} />
             </>
           )}
-          {formData.employmentType === EMPLOYMENT_TYPES.BUSINESS_OWNER && (
+          {fd.employmentType === EMPLOYMENT_TYPES.BUSINESS_OWNER && (
             <>
-              <FieldRow label="GST Number" value={formData.gstNumber} />
-              <FieldRow label="Office Address" value={formData.officeAddress} />
+              <FieldRow label="GST Number" value={fd.gstNumber} />
+              <FieldRow label="Office Address" value={fd.officeAddress} />
             </>
           )}
         </SectionCard>
 
-        {formData.showCoApplicant && (
+        {showCoApplicant && (
           <SectionCard title="Co-Applicant & Guarantor" onEdit={() => goToStep(5)}>
-            <FieldRow label="Name" value={formData.coApplicantName} />
-            <FieldRow label="Relationship" value={formData.coApplicantRelationship} />
-            <FieldRow label="PAN" value={formData.coApplicantPan} />
-            <FieldRow label="Income" value={formData.coApplicantIncome ? formatIndian(formData.coApplicantIncome) : null} />
+            <FieldRow label="Name" value={fd.coApplicantName} />
+            <FieldRow label="Relationship" value={fd.coApplicantRelationship} />
+            <FieldRow label="PAN" value={fd.coApplicantPan} />
+            <FieldRow label="Income" value={fd.coApplicantIncome ? formatIndian(fd.coApplicantIncome) : null} />
           </SectionCard>
         )}
 
@@ -186,22 +191,15 @@ export default function Step8Review({ formData, updateFields, errors, goToStep }
           {requiredDocs.map((key) => {
             const spec = DOCUMENT_SPECS[key];
             if (!spec) return null;
-            const file = formData.documents?.[key];
+            const file = fd.documents?.[key];
             const isUploaded = spec.multiple
               ? Array.isArray(file) && file.length > 0
               : file instanceof File;
             return (
-              <FieldRow
-                key={key}
-                label={spec.label}
-                value={isUploaded ? '✓ Uploaded' : 'Not uploaded'}
-              />
+              <FieldRow key={key} label={spec.label} value={isUploaded ? '✓ Uploaded' : 'Not uploaded'} />
             );
           })}
-          <FieldRow
-            label="E-Signature"
-            value={formData.signature ? '✓ Signed' : 'Not signed'}
-          />
+          <FieldRow label="E-Signature" value={fd.signature ? '✓ Signed' : 'Not signed'} />
         </SectionCard>
       </div>
 
@@ -209,8 +207,8 @@ export default function Step8Review({ formData, updateFields, errors, goToStep }
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">Pre-Approval Summary</h3>
           <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-            <FieldRow label="Loan Amount" value={formatIndian(formData.loanAmount)} />
-            <FieldRow label="Tenure" value={`${formData.loanTenure} months`} />
+            <FieldRow label="Loan Amount" value={formatIndian(fd.loanAmount)} />
+            <FieldRow label="Tenure" value={`${fd.loanTenure} months`} />
             <FieldRow label="Interest Rate" value={`${summary.annualRate}% p.a.`} />
             <FieldRow label="Monthly EMI" value={formatIndian(summary.emi)} highlight="warning" />
             <FieldRow label="Total Interest Payable" value={formatIndian(summary.totalInterest)} />
@@ -237,42 +235,42 @@ export default function Step8Review({ formData, updateFields, errors, goToStep }
 
         <Checkbox
           label="I confirm that all information provided in this application is true and accurate to the best of my knowledge"
-          checked={formData.consentAccurate}
+          checked={fd.consentAccurate}
           onChange={handleConsentChange('consentAccurate')}
-          error={errors?.consentAccurate}
+          error={err('consentAccurate')}
           data-cy="step8-consent-accurate"
         />
 
         <Checkbox
           label="I authorise LendSwift to perform a credit check and verify my financial history"
-          checked={formData.consentCreditCheck}
+          checked={fd.consentCreditCheck}
           onChange={handleConsentChange('consentCreditCheck')}
-          error={errors?.consentCreditCheck}
+          error={err('consentCreditCheck')}
           data-cy="step8-consent-credit"
         />
 
         <Checkbox
           label="I accept the Terms & Conditions and Privacy Policy of LendSwift"
-          checked={formData.consentTerms}
+          checked={fd.consentTerms}
           onChange={handleConsentChange('consentTerms')}
-          error={errors?.consentTerms}
+          error={err('consentTerms')}
           data-cy="step8-consent-terms"
         />
 
         <Checkbox
           label="I consent to receive communications regarding my application via email, SMS, or phone"
-          checked={formData.consentCommunications}
+          checked={fd.consentCommunications}
           onChange={handleConsentChange('consentCommunications')}
-          error={errors?.consentCommunications}
+          error={err('consentCommunications')}
           data-cy="step8-consent-comm"
         />
 
         {emiRatio > 50 && (
           <Checkbox
             label="I acknowledge and accept that my EMI exceeds 50% of my monthly income and I wish to proceed"
-            checked={formData.consentHighEmi}
+            checked={fd.consentHighEmi}
             onChange={handleConsentChange('consentHighEmi')}
-            error={errors?.consentHighEmi}
+            error={err('consentHighEmi')}
             data-cy="step8-consent-high-emi"
           />
         )}
